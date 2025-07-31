@@ -38,10 +38,13 @@ const AppLayout = () => {
   );
 };
 
+import IntroPage from './pages/intro';
+
 function App() {
   return (
     <Routes>
       {/* Public routes */}
+      <Route path="/" element={<IntroPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />

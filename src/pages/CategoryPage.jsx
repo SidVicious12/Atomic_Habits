@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getAllDailyLogs } from '../lib/daily-logs';
 import { MetricChart } from '../components/MetricChart';
 import { DataTable } from '../components/DataTable';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../lib/supabase';
 import { RefreshCw } from 'lucide-react';
 
 
