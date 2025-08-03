@@ -1,7 +1,9 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+
 import { supabase } from "@/lib/supabase";
+import Magnet3D from "./Magnet3D";
 
 // Utility for conditional classnames
 const cn = (...classes: (string | false | null | undefined)[]) =>
@@ -49,185 +51,6 @@ const Input: React.FC<InputProps> = ({ className = "", ...props }) => (
     {...props}
   />
 );
-
-type RoutePoint = { x: number; y: number; delay: number };
-
-/************************
- * Habit Progress Canvas *
- ************************/
-const HabitProgress: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dim, setDim] = useState({ width: 0, height: 0 });
-
-  // Resize handling
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ro = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setDim({ width, height });
-      canvas.width = width;
-      canvas.height = height;
-    });
-    ro.observe(canvas.parentElement as Element);
-    return () => ro.disconnect();
-  }, []);
-
-  // Drawing logic
-  useEffect(() => {
-    if (!dim.width || !dim.height) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let startTime = Date.now();
-    let raf: number;
-
-    // Generate habit circles
-    const circles: { x: number; y: number; progress: number; color: string; size: number }[] = [];
-    const spacing = 80;
-    const colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444"];
-    
-    for (let x = spacing; x < dim.width - spacing; x += spacing) {
-      for (let y = spacing; y < dim.height - spacing; y += spacing) {
-        circles.push({
-          x,
-          y,
-          progress: Math.random() * 0.8 + 0.2,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          size: Math.random() * 10 + 15,
-        });
-      }
-    }
-
-    const drawBackground = () => {
-      ctx.clearRect(0, 0, dim.width, dim.height);
-      
-      // Draw subtle grid pattern
-      ctx.strokeStyle = "rgba(59,130,246,0.08)";
-      ctx.lineWidth = 0.5;
-      const gridSpacing = 25;
-      
-      for (let x = 0; x < dim.width; x += gridSpacing) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, dim.height);
-        ctx.stroke();
-      }
-      
-      for (let y = 0; y < dim.height; y += gridSpacing) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(dim.width, y);
-        ctx.stroke();
-      }
-    };
-
-    const drawHabitCircles = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      
-      circles.forEach((circle, index) => {
-        const phase = (elapsed * 0.3 + index * 0.5) % (Math.PI * 2);
-        const pulseRadius = circle.size + Math.sin(phase) * 3;
-        
-        // Outer glow
-        const gradient = ctx.createRadialGradient(
-          circle.x, circle.y, 0,
-          circle.x, circle.y, pulseRadius + 10
-        );
-        gradient.addColorStop(0, `${circle.color}20`);
-        gradient.addColorStop(1, `${circle.color}00`);
-        
-        ctx.beginPath();
-        ctx.arc(circle.x, circle.y, pulseRadius + 10, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        
-        // Background circle
-        ctx.beginPath();
-        ctx.arc(circle.x, circle.y, pulseRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(59,130,246,0.15)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        // Progress arc
-        ctx.beginPath();
-        ctx.arc(
-          circle.x, 
-          circle.y, 
-          pulseRadius - 4, 
-          -Math.PI / 2, 
-          -Math.PI / 2 + (circle.progress * Math.PI * 2)
-        );
-        ctx.strokeStyle = circle.color;
-        ctx.lineWidth = 4;
-        ctx.lineCap = "round";
-        ctx.stroke();
-        
-        // Center dot
-        ctx.beginPath();
-        ctx.arc(circle.x, circle.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = circle.color;
-        ctx.fill();
-        
-        // Progress percentage (small text)
-        const percentage = Math.round(circle.progress * 100);
-        ctx.fillStyle = "rgba(55,65,81,0.7)";
-        ctx.font = "10px system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText(`${percentage}%`, circle.x, circle.y + 35);
-      });
-    };
-
-    const drawConnections = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      
-      // Draw subtle connections between nearby circles
-      for (let i = 0; i < circles.length - 1; i++) {
-        const circle1 = circles[i];
-        const circle2 = circles[i + 1];
-        
-        if (circle1 && circle2) {
-          const distance = Math.sqrt(
-            Math.pow(circle2.x - circle1.x, 2) + Math.pow(circle2.y - circle1.y, 2)
-          );
-          
-          if (distance < 120) {
-            const phase = (elapsed * 0.5 + i * 0.3) % (Math.PI * 2);
-            const opacity = (Math.sin(phase) + 1) * 0.1 + 0.05;
-            
-            ctx.beginPath();
-            ctx.moveTo(circle1.x, circle1.y);
-            ctx.lineTo(circle2.x, circle2.y);
-            ctx.strokeStyle = `rgba(59,130,246,${opacity})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        }
-      }
-    };
-
-    const loop = () => {
-      drawBackground();
-      drawConnections();
-      drawHabitCircles();
-      if ((Date.now() - startTime) / 1000 > 30) startTime = Date.now();
-      raf = requestAnimationFrame(loop);
-    };
-    loop();
-    return () => cancelAnimationFrame(raf);
-  }, [dim]);
-
-  return (
-    <div className="relative w-full h-full overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-    </div>
-  );
-};
 
 /*******************
  * Main Card View  *
@@ -284,37 +107,6 @@ const SignInCard: React.FC = () => {
       >
         {/* Left – Map */}
         <div className="hidden md:block w-1/2 h-[600px] relative overflow-hidden border-r border-gray-100">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-100">
-            <HabitProgress />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="mb-6"
-              >
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                  <ArrowRight className="text-white h-6 w-6" />
-                </div>
-              </motion.div>
-              <motion.h2
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.5 }}
-                className="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600"
-              >
-                Atomic Habits
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                className="text-sm text-center text-gray-600 max-w-xs"
-              >
-                Sign in to track your habits, build consistency, and transform your life one small step at a time
-              </motion.p>
-            </div>
-          </div>
         </div>
 
         {/* Right – Form */}
@@ -451,10 +243,44 @@ const SignInCard: React.FC = () => {
 /*************
  * Page Wrapper
  *************/
-const SignInPage: React.FC = () => (
-  <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-    <SignInCard />
-  </div>
-);
+const SignInPage: React.FC = () => {
+  return (
+    <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-purple-800 via-purple-600 to-blue-600">
+
+      
+      {/* Title at the top */}
+      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-4xl md:text-5xl font-bold text-white text-center tracking-wide"
+        >
+          Atomic Habits
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="text-white/80 text-center mt-2 text-lg"
+        >
+          Sign in to track your habits, build consistency, and transform your life one small step at a time
+        </motion.p>
+      </div>
+
+      {/* 3D Magnet in left column - Corrected Layout */}
+      <div className="absolute top-0 left-0 h-full w-1/2 flex items-center justify-center pointer-events-none">
+        <div className="relative w-96 h-96 pointer-events-auto">
+          <Magnet3D />
+        </div>
+      </div>
+
+      {/* Login card on right side */}
+      <div className="absolute inset-0 flex items-center justify-end pr-16 z-20">
+        <SignInCard />
+      </div>
+    </div>
+  );
+};
 
 export default SignInPage;

@@ -3,6 +3,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Text, OrbitControls, Stars } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import Hawk3D from "./Hawk3D";
+import WatercolorBackground from "./WatercolorBackground";
 
 // Floating text component
 function FloatingText() {
@@ -20,10 +22,6 @@ function FloatingText() {
       color="#ffffff"
       anchorX="center"
       anchorY="middle"
-      bevelEnabled
-      bevelThickness={0.05}
-      bevelSize={0.02}
-      bevelSegments={5}
     >
       Atomic Habits
     </Text>
@@ -44,6 +42,8 @@ const IntroScene: React.FC = () => {
         <ambientLight intensity={1} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
         <Suspense fallback={null}>
+          <WatercolorBackground />
+          <Hawk3D position={[2, 1, 0]} scale={1.5} />
           <FloatingText />
         </Suspense>
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
