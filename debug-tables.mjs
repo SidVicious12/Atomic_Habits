@@ -25,44 +25,54 @@ async function debugTables() {
     
     console.log('Authenticated user ID:', user.id);
     
-    console.log('=== CHECKING HABITS TABLE ===');
-    const { data: habitsData, error: habitsError } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', user.id)
-      .limit(10);
-    
-    if (habitsError) {
-      console.error('Error fetching habits:', habitsError);
-    } else {
-      console.log(`Found ${habitsData?.length || 0} habits (showing first 5):`);
-      console.log(JSON.stringify(habitsData, null, 2));
-    }
+    // Note: Removed habits table check - table doesn't exist in current schema
+    // The app uses daily_logs table for habit tracking instead
 
     console.log('\n=== CHECKING DAILY_LOGS TABLE ===');
     const { data: logsData, error: logsError } = await supabase
       .from('daily_logs')
       .select('*')
+      .eq('user_id', user.id) // Add user filter for RLS compliance
+      .order('log_date', { ascending: false })
       .limit(5);
     
     if (logsError) {
       console.error('Error fetching daily_logs:', logsError);
     } else {
-      console.log(`Found ${logsData?.length || 0} daily_logs (showing first 5):`);
+      console.log(`Found ${logsData?.length || 0} daily_logs for user (showing latest 5):`);
       console.log(JSON.stringify(logsData, null, 2));
     }
 
-    console.log('\n=== CHECKING HABIT_HISTORY TABLE ===');
-    const { data: historyData, error: historyError } = await supabase
-      .from('habit_history')
-      .select('*')
-      .limit(5);
+    // Note: Removed habit_history table check - table doesn't exist in current schema
+    // All habit data is stored in daily_logs table
+
+    console.log('\n=== DAILY_LOGS TABLE STATISTICS ===');
+    const { count, error: countError } = await supabase
+      .from('daily_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
     
-    if (historyError) {
-      console.error('Error fetching habit_history:', historyError);
+    if (countError) {
+      console.error('Error counting daily_logs:', countError);
     } else {
-      console.log(`Found ${historyData?.length || 0} habit_history entries (showing first 5):`);
-      console.log(JSON.stringify(historyData, null, 2));
+      console.log(`Total daily logs for user: ${count}`);
+    }
+
+    // Check for recent activity
+    const { data: recentData, error: recentError } = await supabase
+      .from('daily_logs')
+      .select('log_date')
+      .eq('user_id', user.id)
+      .gte('log_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .order('log_date', { ascending: false });
+    
+    if (recentError) {
+      console.error('Error fetching recent logs:', recentError);
+    } else {
+      console.log(`Logs in past 7 days: ${recentData?.length || 0}`);
+      if (recentData?.length > 0) {
+        console.log('Recent dates:', recentData.map(d => d.log_date).join(', '));
+      }
     }
 
   } catch (error) {

@@ -3,7 +3,8 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { upsertDailyLog } from '@/lib/daily-logs';
+import { useUpsertDailyLog } from '@/hooks/useDailyLogs';
+import type { DatabaseError } from '@/lib/database-error-handler';
 
 const dailyLogSchema = z.object({
   log_date: z.string(),
@@ -64,7 +65,9 @@ const dayRatingOptions = ['Terrible', 'Bad', 'Okay', 'Good', 'Legendary'];
 
 export default function DailyLogForm() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DailyLogFormData>({
+  const upsertMutation = useUpsertDailyLog();
+  
+  const { register, handleSubmit, formState: { errors } } = useForm<DailyLogFormData>({
     resolver: zodResolver(dailyLogSchema),
     defaultValues: {
       log_date: new Date().toISOString().split('T')[0],
@@ -74,11 +77,15 @@ export default function DailyLogForm() {
 
   const onSubmit: SubmitHandler<DailyLogFormData> = async (data) => {
     try {
-      await upsertDailyLog(data);
-      navigate('/'); // Navigate to homepage on success
+      await upsertMutation.mutateAsync(data);
+      
+      // Navigate after brief delay
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     } catch (error) {
-      console.error('Failed to save daily log:', error);
-      // Optionally, show an error message to the user
+      // Error handling is done in the mutation hook
+      console.error('Form submission error:', error);
     }
   };
 
@@ -164,9 +171,27 @@ export default function DailyLogForm() {
         </FormSection>
 
         <div className="flex justify-end gap-4 pt-4">
-          <button type="button" onClick={() => navigate('/')} className="px-6 py-2 border rounded-md">Cancel</button>
-          <button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : 'Save Log'}
+          <button 
+            type="button" 
+            onClick={() => navigate('/')} 
+            className="px-6 py-2 border rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            disabled={upsertMutation.isPending}
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            disabled={upsertMutation.isPending} 
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {upsertMutation.isPending ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin">⏳</span>
+                Saving...
+              </span>
+            ) : (
+              'Save Log'
+            )}
           </button>
         </div>
 

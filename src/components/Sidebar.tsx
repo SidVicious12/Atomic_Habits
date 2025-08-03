@@ -11,7 +11,11 @@ const iconMap = {
   'New Habits': HiPlus,
 };
 
-export default function Sidebar({ categories }) {
+interface SidebarProps {
+  categories: string[];
+}
+
+export default function Sidebar({ categories }: SidebarProps) {
   const location = useLocation();
 
   return (

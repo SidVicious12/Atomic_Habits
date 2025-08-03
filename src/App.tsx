@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-
+import React from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
+import { ToastProvider } from './components/ui/toast';
+import { ErrorBoundary } from './lib/error-boundary';
 
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
@@ -42,28 +43,32 @@ import IntroPage from './pages/intro';
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<IntroPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/update-password" element={<UpdatePasswordPage />} />
+    <ErrorBoundary>
+      <ToastProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<IntroPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/update-password" element={<UpdatePasswordPage />} />
 
-      {/* Protected routes */}
-      <Route 
-        path="/*" 
-        element={
-          <RequireAuth>
-            <AppLayout />
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Homepage />} />
-        <Route path="log" element={<DailyLogPage />} />
-        <Route path="category/:categoryName" element={<CategoryPage />} />
-        <Route path="habit/:habitName" element={<HabitDetailPage />} />
-      </Route>
-    </Routes>
+          {/* Protected routes */}
+          <Route 
+            path="/*" 
+            element={
+              <RequireAuth>
+                <AppLayout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Homepage />} />
+            <Route path="log" element={<DailyLogPage />} />
+            <Route path="category/:categoryName" element={<CategoryPage />} />
+            <Route path="habit/:habitName" element={<HabitDetailPage />} />
+          </Route>
+        </Routes>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 
