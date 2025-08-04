@@ -3,7 +3,6 @@ import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/lib/supabase";
-import Magnet3D from "./Magnet3D";
 
 // Utility for conditional classnames
 const cn = (...classes: (string | false | null | undefined)[]) =>
@@ -268,11 +267,9 @@ const SignInPage: React.FC = () => {
         </motion.p>
       </div>
 
-      {/* 3D Magnet in left column - Corrected Layout */}
+      {/* Background decoration in left column */}
       <div className="absolute top-0 left-0 h-full w-1/2 flex items-center justify-center pointer-events-none">
-        <div className="relative w-96 h-96 pointer-events-auto">
-          <Magnet3D />
-        </div>
+        <div className="relative w-96 h-96 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full opacity-20"></div>
       </div>
 
       {/* Login card on right side */}
