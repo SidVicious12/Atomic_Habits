@@ -17,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      'react-reconciler/constants': path.resolve(__dirname, './src/shims/react-reconciler-constants.js'),
     },
   },
   server: {
@@ -78,13 +79,14 @@ export default defineConfig({
       'react-router-dom',
       '@tanstack/react-query',
       'framer-motion',
-      '@supabase/supabase-js'
-    ],
-    exclude: [
-      // Exclude large dependencies that should be lazy loaded
+      '@supabase/supabase-js',
+      // Pre-bundle three.js stack to convert CommonJS -> ESM
       '@react-three/fiber',
       '@react-three/drei',
-      'three'
-    ]
+      'three',
+      'react-reconciler'
+    ],
+    // No exclusions – allow Vite to prebundle everything above
+    exclude: []
   }
 })
