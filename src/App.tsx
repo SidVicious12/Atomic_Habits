@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { ToastProvider } from './components/ui/toast';
 import { ErrorBoundary } from './lib/error-boundary';
+import './styles/responsive-3d.css';
 
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';

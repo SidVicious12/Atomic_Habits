@@ -1,0 +1,161 @@
+/* Responsive 3D Homepage Styles */
+
+/* Base responsive breakpoints */
+@media (max-width: 768px) {
+  /* Mobile optimizations */
+  .hero-3d-canvas {
+    touch-action: none; /* Prevent unwanted gestures */
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .hero-button {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 0 1rem;
+  }
+
+  .performance-indicators {
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Small mobile devices */
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .hero-description {
+    font-size: 0.875rem;
+    padding: 0 0.5rem;
+  }
+
+  .hero-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-ui-overlay {
+    padding-bottom: 1rem;
+  }
+
+  .hero-buttons {
+    gap: 0.5rem;
+  }
+
+  .hero-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .hero-description {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .performance-indicators {
+    font-size: 0.8rem;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .hero-3d-canvas {
+    animation: none;
+  }
+
+  .hero-particles * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: light) {
+  .hero-performance-indicator {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Focus and accessibility */
+.hero-button:focus-visible {
+  outline: 2px solid #4F46E5;
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.hero-loading {
+  background: linear-gradient(45deg, #1e293b, #7c3aed, #1e293b);
+  background-size: 400% 400%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Error fallback styles */
+.hero-error-fallback {
+  background: linear-gradient(135deg, #1e293b 0%, #7c3aed 50%, #1e293b 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.hero-error-content {
+  text-align: center;
+  max-width: 500px;
+  color: white;
+}
+
+/* Performance optimizations */
+.hero-3d-low-quality .hero-particles {
+  display: none;
+}
+
+.hero-3d-low-quality .hero-glow-effects {
+  opacity: 0.3;
+}
+
+.hero-3d-medium-quality .hero-particles {
+  opacity: 0.6;
+}
+
+/* Safari specific fixes */
+@supports (-webkit-appearance: none) {
+  .hero-3d-canvas {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}

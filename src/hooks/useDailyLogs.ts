@@ -2,12 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getAllDailyLogs, 
   getLatestDailyLog, 
-  upsertDailyLog,
-  getDailyLogsPaginated,
+  upsertDailyLog
+} from '@/lib/daily-logs';
+import { 
+  getDailyLogsPaginated as getPaginated,
   getDailyLogsForDateRange,
   getDailyLogsSummary
-} from '@/lib/daily-logs';
-import { getDailyLogsPaginated as getPaginated } from '@/lib/daily-logs-paginated';
+} from '@/lib/daily-logs-paginated';
 import { queryKeys, cacheUtils } from '@/lib/react-query';
 import { useToast } from '@/components/ui/toast';
 import type { DailyLogFormData } from '@/components/DailyLogForm';
