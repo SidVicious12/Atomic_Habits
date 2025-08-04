@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import Hawk3D from "@/components/ui/Hawk3D";
 import { motion } from "framer-motion";
+import logo from "../../assets/logo.png";
 
 import { supabase } from "@/lib/supabase";
 
@@ -250,15 +251,22 @@ const SignInPage: React.FC = () => {
       <div className="absolute inset-0 bg-black/20 mix-blend-multiply" />
       
       {/* Title at the top */}
-      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-        <motion.h1 
+      <div className="absolute top-8 inset-x-0 z-30 w-full flex justify-center items-center">
+        <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-4xl md:text-5xl font-bold text-white text-center tracking-wide drop-shadow-2xl"
+          className="flex items-center justify-center gap-4"
         >
-          Atomic Habits
-        </motion.h1>
+          <img 
+            src={logo} 
+            alt="Atomic Habits Logo" 
+            className="h-12 w-12 md:h-16 md:w-16 object-contain drop-shadow-2xl" 
+          />
+          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-wide drop-shadow-2xl">
+            Atomic Habits
+          </h1>
+        </motion.div>
       </div>
 
       {/* Subtle sci-fi grid overlay on left side */}

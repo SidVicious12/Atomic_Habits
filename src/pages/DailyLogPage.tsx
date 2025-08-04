@@ -1,11 +1,9 @@
 import React from 'react';
-import DailyLogForm from '@/components/DailyLogForm';
+import ImprovedDailyLogForm from '@/components/ImprovedDailyLogForm';
 
 const DailyLogPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DailyLogForm />
-    </div>
+    <ImprovedDailyLogForm />
   );
 };
 
