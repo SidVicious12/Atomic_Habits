@@ -12,7 +12,7 @@ export default function TopNav() {
     <header className="w-full flex justify-between items-center px-6 py-4 bg-white border-b shadow-sm">
       {/* Logo */}
       <div className="flex items-center gap-3">
-        <img src={logo} alt="Logo" className="h-16 w-16 object-contain rounded-md shadow-sm" />
+        <img src={logo} alt="Atomic Habits Logo" className="h-12 w-12 object-contain rounded-md shadow-sm" />
         <span className="text-2xl font-bold text-black whitespace-nowrap">Atomic Habits</span>
       </div>
 

@@ -1,5 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, Suspense } from "react";
+import { Canvas } from "@react-three/fiber";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import Hawk3D from "@/components/ui/Hawk3D";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/lib/supabase";
@@ -102,25 +104,21 @@ const SignInCard: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl overflow-hidden rounded-2xl flex bg-white shadow-xl"
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-white/95 backdrop-blur-lg shadow-2xl border border-white/20"
       >
-        {/* Left – Map */}
-        <div className="hidden md:block w-1/2 h-[600px] relative overflow-hidden border-r border-gray-100">
-        </div>
-
-        {/* Right – Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center bg-white">
+        {/* Form - Full Width */}
+        <div className="w-full p-8 md:p-10 flex flex-col justify-center bg-gradient-to-br from-white/98 to-gray-50/95 backdrop-blur-lg">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">Welcome back</h1>
-            <p className="text-gray-500 mb-8">Continue building your atomic habits</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-900">Welcome back</h1>
+            <p className="text-gray-600 mb-8">Continue building your atomic habits</p>
 
             <div className="mb-6">
               <button
-                className="w-full flex items-center justify-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-all duration-300 text-gray-700 shadow-sm"
+                className="w-full flex items-center justify-center gap-2 bg-white/80 border border-gray-300/50 rounded-lg p-3 hover:bg-white/90 hover:border-blue-300/50 transition-all duration-300 text-gray-700 shadow-lg backdrop-blur-sm"
                 onClick={handleGoogleLogin}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -158,8 +156,8 @@ const SignInCard: React.FC = () => {
 
             <form className="space-y-5" onSubmit={handleEmailLogin}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-blue-500">*</span>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-1">
+                  Email <span className="text-blue-600">*</span>
                 </label>
                 <Input
                   id="email"
@@ -168,12 +166,12 @@ const SignInCard: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   required
-                  className="bg-gray-50 border-gray-200 placeholder:text-gray-400 text-gray-800 w-full focus:border-blue-500 focus:ring-blue-500"
+                  className="bg-white/80 border-gray-300/50 placeholder:text-gray-500 text-gray-900 w-full focus:border-blue-500 focus:ring-blue-500 backdrop-blur-sm shadow-sm"
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password <span className="text-blue-500">*</span>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-800 mb-1">
+                  Password <span className="text-blue-600">*</span>
                 </label>
                 <div className="relative">
                   <Input
@@ -183,7 +181,7 @@ const SignInCard: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="bg-gray-50 border-gray-200 placeholder:text-gray-400 text-gray-800 w-full pr-10 focus:border-blue-500 focus:ring-blue-500"
+                    className="bg-white/80 border-gray-300/50 placeholder:text-gray-500 text-gray-900 w-full pr-10 focus:border-blue-500 focus:ring-blue-500 backdrop-blur-sm shadow-sm"
                   />
                   <button
                     type="button"
@@ -206,8 +204,8 @@ const SignInCard: React.FC = () => {
                   type="submit"
                   disabled={isLoading || !email || !password}
                   className={cn(
-                    "w-full bg-gradient-to-r relative overflow-hidden from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed",
-                    hover && "shadow-lg shadow-blue-200"
+                    "w-full bg-gradient-to-r relative overflow-hidden from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
+                    hover && "shadow-xl shadow-blue-300/50"
                   )}
                 >
                   <span className="flex items-center justify-center">
@@ -227,7 +225,7 @@ const SignInCard: React.FC = () => {
               </motion.div>
 
               <div className="text-center mt-6">
-                <a href="#" className="text-blue-600 hover:text-blue-700 text-sm transition-colors">
+                <a href="#" className="text-blue-700 hover:text-blue-800 text-sm transition-colors font-medium">
                   Forgot password?
                 </a>
               </div>
@@ -244,8 +242,12 @@ const SignInCard: React.FC = () => {
  *************/
 const SignInPage: React.FC = () => {
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-purple-800 via-purple-600 to-blue-600">
-
+    <div className="min-h-screen w-full relative overflow-hidden">
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-700 via-indigo-700 to-blue-700" />
+      
+      {/* Subtle overlay for depth */}
+      <div className="absolute inset-0 bg-black/20 mix-blend-multiply" />
       
       {/* Title at the top */}
       <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
@@ -253,23 +255,30 @@ const SignInPage: React.FC = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-4xl md:text-5xl font-bold text-white text-center tracking-wide"
+          className="text-4xl md:text-5xl font-bold text-white text-center tracking-wide drop-shadow-2xl"
         >
           Atomic Habits
         </motion.h1>
-        <motion.p 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-white/80 text-center mt-2 text-lg"
-        >
-          Sign in to track your habits, build consistency, and transform your life one small step at a time
-        </motion.p>
       </div>
 
-      {/* Background decoration in left column */}
-      <div className="absolute top-0 left-0 h-full w-1/2 flex items-center justify-center pointer-events-none">
-        <div className="relative w-96 h-96 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full opacity-20"></div>
+      {/* Subtle sci-fi grid overlay on left side */}
+      <div className="absolute top-0 left-0 h-full w-1/2 flex items-center justify-center pointer-events-none opacity-30">
+        <div className="relative w-full h-full">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent"></div>
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-cyan-400/30 rounded-lg animate-pulse"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-24 h-24 border border-blue-400/30 rounded-full animate-pulse delay-300"></div>
+        </div>
+      </div>
+
+      {/* 3D Hawk on the left */}
+      <div className="absolute inset-0 flex items-center justify-start pl-16 z-20 pointer-events-none">
+        <Canvas style={{ width: 396, height: 396 }} camera={{ position: [0, 0, 3] }}>
+          <ambientLight intensity={0.7} />
+          <directionalLight position={[5, 5, 5]} intensity={0.8} />
+          <Suspense fallback={null}>
+            <Hawk3D position={[0, 0, 0]} scale={2} />
+          </Suspense>
+        </Canvas>
       </div>
 
       {/* Login card on right side */}

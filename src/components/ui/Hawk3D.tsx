@@ -114,12 +114,13 @@ const Hawk3D: React.FC<Hawk3DProps> = ({ position = [0, 0, 0], scale = 1 }) => {
       {/* Main body */}
       <mesh geometry={hawkGeometry}>
         <meshPhongMaterial 
-          color="#1a202c" 
-          shininess={60} 
+          color="#4a3f36" 
+          shininess={80} 
           transparent 
-          opacity={0.95}
-          emissive="#0f1419"
-          emissiveIntensity={0.1}
+          opacity={0.98}
+          emissive="#2d1810"
+          emissiveIntensity={0.05}
+          specular="#8b7355"
         />
       </mesh>
       
@@ -131,10 +132,13 @@ const Hawk3D: React.FC<Hawk3DProps> = ({ position = [0, 0, 0], scale = 1 }) => {
         rotation={[0, 0, 0.2]}
       >
         <meshPhongMaterial 
-          color="#4a5568" 
-          shininess={20}
+          color="#3d332a" 
+          shininess={40}
           transparent
-          opacity={0.8}
+          opacity={0.92}
+          emissive="#1a0f08"
+          emissiveIntensity={0.03}
+          specular="#6b5742"
         />
       </mesh>
       
@@ -146,22 +150,44 @@ const Hawk3D: React.FC<Hawk3DProps> = ({ position = [0, 0, 0], scale = 1 }) => {
         rotation={[0, Math.PI, -0.2]}
       >
         <meshPhongMaterial 
-          color="#4a5568" 
-          shininess={20}
+          color="#3d332a" 
+          shininess={40}
           transparent
-          opacity={0.8}
+          opacity={0.92}
+          emissive="#1a0f08"
+          emissiveIntensity={0.03}
+          specular="#6b5742"
         />
       </mesh>
       
       {/* Eye details */}
       <mesh position={[-0.08, 0.65, 0.12]}>
-        <sphereGeometry args={[0.03, 8, 8]} />
-        <meshPhongMaterial color="#10b981" emissive="#065f46" />
+        <sphereGeometry args={[0.04, 12, 12]} />
+        <meshPhongMaterial 
+          color="#d4af37" 
+          emissive="#b8860b" 
+          emissiveIntensity={0.3}
+          shininess={100}
+        />
       </mesh>
       
       <mesh position={[0.08, 0.65, 0.12]}>
-        <sphereGeometry args={[0.03, 8, 8]} />
-        <meshPhongMaterial color="#10b981" emissive="#065f46" />
+        <sphereGeometry args={[0.04, 12, 12]} />
+        <meshPhongMaterial 
+          color="#d4af37" 
+          emissive="#b8860b" 
+          emissiveIntensity={0.3}
+          shininess={100}
+        />
+      </mesh>
+      
+      {/* Beak detail */}
+      <mesh position={[0, 0.9, 0.17]}>
+        <coneGeometry args={[0.05, 0.15, 8]} />
+        <meshPhongMaterial 
+          color="#2c1810" 
+          shininess={60}
+        />
       </mesh>
     </group>
   );
