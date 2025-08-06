@@ -416,7 +416,6 @@ export async function importCSVToSupabase(csvContent: string): Promise<{
                 } else {
                   console.warn(`⚠️  Workout field should be array, got:`, typeof value, value);
                 }
-              }
               } else if (['dabs_count', 'water_bottles_count', 'pages_read_count', 'weight_lbs', 'calories'].includes(key)) {
                 // Numeric fields - ensure they're valid numbers
                 const num = Number(value);
