@@ -47,11 +47,21 @@ const MorningWalkDashboard = () => {
       return [];
     }
 
-    console.log('Morning Walk Debug: Processing', { 
-      totalLogs: dailyLogs.length,
-      dateRange: { start: dateRange.start, end: dateRange.end },
-      sampleLog: dailyLogs[0]
-    });
+    console.log('Morning Walk Debug: Processing'); 
+    console.log('  - Total logs:', dailyLogs.length);
+    console.log('  - Date range start:', dateRange.start);
+    console.log('  - Date range end:', dateRange.end);
+    console.log('  - Sample log:', dailyLogs[0]);
+    console.log('  - Sample log keys:', Object.keys(dailyLogs[0] || {}));
+    
+    // Check for 8/4 entry specifically
+    const aug4Entry = dailyLogs.find(log => log.log_date === '2025-08-04');
+    if (aug4Entry) {
+      console.log('  - Found 8/4 entry:', aug4Entry);
+      console.log('  - 8/4 morning_walk value:', aug4Entry.morning_walk, typeof aug4Entry.morning_walk);
+    } else {
+      console.log('  - No 8/4 entry found in logs');
+    }
 
     // Filter logs by date range and where morning_walk is true
     const filteredLogs = dailyLogs.filter(log => {
@@ -78,10 +88,19 @@ const MorningWalkDashboard = () => {
       return isInRange;
     });
 
-    console.log('Morning Walk Debug: Filtered logs', { 
-      filteredCount: filteredLogs.length,
-      withMorningWalk: filteredLogs.filter(log => log.morning_walk === true).length
-    });
+    console.log('Morning Walk Debug: Filtered logs');
+    console.log('  - Filtered count:', filteredLogs.length);
+    console.log('  - With morning_walk === true:', filteredLogs.filter(log => log.morning_walk === true).length);
+    console.log('  - With morning_walk truthy:', filteredLogs.filter(log => log.morning_walk).length);
+    
+    if (filteredLogs.length > 0) {
+      console.log('  - Sample filtered log:', filteredLogs[0]);
+      console.log('  - Sample morning_walk values:', filteredLogs.slice(0, 5).map(log => ({
+        date: log.log_date,
+        morning_walk: log.morning_walk,
+        type: typeof log.morning_walk
+      })));
+    }
 
     // Group by month and count morning walks
     const monthlyData = {};
