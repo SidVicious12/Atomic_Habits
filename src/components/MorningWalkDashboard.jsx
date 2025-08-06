@@ -11,7 +11,7 @@ const allMonths = [
 
 const MorningWalkDashboard = () => {
   const [dateRange, setDateRange] = useState({
-    start: today(getLocalTimeZone()).subtract({ months: 6 }), // Show last 6 months by default
+    start: new CalendarDate(2025, 2, 1), // Start from Feb 2025 to include recent data
     end: today(getLocalTimeZone()),
   });
 
@@ -19,10 +19,11 @@ const MorningWalkDashboard = () => {
   const { data: dailyLogs = [], isLoading, error } = useDailyLogs();
 
   const handleDateRangeChange = (newRange) => {
-    if (!newRange) return;
+    if (!newRange || !newRange.start || !newRange.end) return;
     
     // Convert plain objects to CalendarDate objects if needed
     const convertToCalendarDate = (dateObj) => {
+      if (!dateObj) return null;
       if (dateObj && typeof dateObj === 'object' && dateObj.year && dateObj.month) {
         // If it's a plain object with year, month, day
         return new CalendarDate(dateObj.year, dateObj.month, dateObj.day || 1);
@@ -31,10 +32,15 @@ const MorningWalkDashboard = () => {
       return dateObj;
     };
 
-    setDateRange({
-      start: convertToCalendarDate(newRange.start),
-      end: convertToCalendarDate(newRange.end),
-    });
+    const newStart = convertToCalendarDate(newRange.start);
+    const newEnd = convertToCalendarDate(newRange.end);
+    
+    if (newStart && newEnd) {
+      setDateRange({
+        start: newStart,
+        end: newEnd,
+      });
+    }
   };
 
   const chartData = useMemo(() => {
