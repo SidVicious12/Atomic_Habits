@@ -11,7 +11,7 @@ const allMonths = [
 
 const MorningWalkDashboard = () => {
   const [dateRange, setDateRange] = useState({
-    start: today(getLocalTimeZone()).subtract({ years: 1 }),
+    start: new CalendarDate(2016, 1, 1), // Start from 2016 to include all your historical data
     end: today(getLocalTimeZone()),
   });
 
@@ -39,8 +39,19 @@ const MorningWalkDashboard = () => {
 
   const chartData = useMemo(() => {
     if (!dateRange?.start || !dateRange?.end || !dailyLogs.length) {
+      console.log('Morning Walk Debug: Missing data', { 
+        dateRangeStart: dateRange?.start, 
+        dateRangeEnd: dateRange?.end, 
+        logsCount: dailyLogs.length 
+      });
       return [];
     }
+
+    console.log('Morning Walk Debug: Processing', { 
+      totalLogs: dailyLogs.length,
+      dateRange: { start: dateRange.start, end: dateRange.end },
+      sampleLog: dailyLogs[0]
+    });
 
     // Filter logs by date range and where morning_walk is true
     const filteredLogs = dailyLogs.filter(log => {
@@ -50,7 +61,26 @@ const MorningWalkDashboard = () => {
       const startDate = new Date(dateRange.start.year, dateRange.start.month - 1, dateRange.start.day || 1);
       const endDate = new Date(dateRange.end.year, dateRange.end.month - 1, dateRange.end.day || 31);
       
-      return logDate >= startDate && logDate <= endDate;
+      const isInRange = logDate >= startDate && logDate <= endDate;
+      
+      // Debug specific dates
+      if (log.log_date.includes('2025-08-04')) {
+        console.log('Morning Walk Debug: Found 8/4 entry', {
+          logDate: log.log_date,
+          morningWalk: log.morning_walk,
+          logDateParsed: logDate,
+          startDate,
+          endDate,
+          isInRange
+        });
+      }
+      
+      return isInRange;
+    });
+
+    console.log('Morning Walk Debug: Filtered logs', { 
+      filteredCount: filteredLogs.length,
+      withMorningWalk: filteredLogs.filter(log => log.morning_walk === true).length
     });
 
     // Group by month and count morning walks
