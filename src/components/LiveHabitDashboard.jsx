@@ -21,7 +21,7 @@ const LiveHabitDashboard = ({
   isNumeric = false 
 }) => {
   const [dateRange, setDateRange] = useState({
-    start: new CalendarDate(2016, 1, 1), // Include all historical data
+    start: today(getLocalTimeZone()).subtract({ months: 6 }), // Show last 6 months by default
     end: today(getLocalTimeZone()),
   });
 
@@ -133,7 +133,7 @@ const LiveHabitDashboard = ({
           year: data.year
         };
       })
-      .filter(item => item.value > 0) // Only show months with data
+      .filter(item => item.tooltip.totalDays > 0) // Show months where we have ANY data (even if habit wasn't done)
       .sort((a, b) => {
         if (a.year !== b.year) return a.year - b.year;
         return a.month - b.month;

@@ -11,7 +11,7 @@ const allMonths = [
 
 const MorningWalkDashboard = () => {
   const [dateRange, setDateRange] = useState({
-    start: new CalendarDate(2016, 1, 1), // Start from 2016 to include all your historical data
+    start: today(getLocalTimeZone()).subtract({ months: 6 }), // Show last 6 months by default
     end: today(getLocalTimeZone()),
   });
 
@@ -83,6 +83,7 @@ const MorningWalkDashboard = () => {
         month: data.month,
         year: data.year
       }))
+      .filter(item => item.total > 0) // Show months where we have ANY data (even if no walks)
       .sort((a, b) => {
         if (a.year !== b.year) return a.year - b.year;
         return a.month - b.month;
