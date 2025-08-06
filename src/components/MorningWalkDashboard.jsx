@@ -54,13 +54,28 @@ const MorningWalkDashboard = () => {
     console.log('  - Sample log:', dailyLogs[0]);
     console.log('  - Sample log keys:', Object.keys(dailyLogs[0] || {}));
     
-    // Check for 8/4 entry specifically
-    const aug4Entry = dailyLogs.find(log => log.log_date === '2025-08-04');
-    if (aug4Entry) {
-      console.log('  - Found 8/4 entry:', aug4Entry);
-      console.log('  - 8/4 morning_walk value:', aug4Entry.morning_walk, typeof aug4Entry.morning_walk);
-    } else {
-      console.log('  - No 8/4 entry found in logs');
+    // Check for recent entries (last 10) and look for patterns
+    const recentEntries = dailyLogs.slice(0, 10);
+    console.log('  - Recent 10 entries dates:', recentEntries.map(log => log.log_date));
+    
+    // Check for 8/4 entry with multiple formats
+    const aug4Patterns = ['2025-08-04', '2025-8-4', '08-04-2025', '8-4-2025'];
+    let aug4Entry = null;
+    for (const pattern of aug4Patterns) {
+      aug4Entry = dailyLogs.find(log => log.log_date === pattern);
+      if (aug4Entry) {
+        console.log('  - Found 8/4 entry with pattern:', pattern, aug4Entry);
+        console.log('  - 8/4 morning_walk value:', aug4Entry.morning_walk, typeof aug4Entry.morning_walk);
+        break;
+      }
+    }
+    if (!aug4Entry) {
+      console.log('  - No 8/4 entry found with any pattern');
+      console.log('  - Sample recent dates to check format:', recentEntries.slice(0, 3).map(log => ({
+        date: log.log_date, 
+        morning_walk: log.morning_walk,
+        keys: Object.keys(log).filter(k => k.includes('walk') || k.includes('morning'))
+      })));
     }
 
     // Filter logs by date range and where morning_walk is true
