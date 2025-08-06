@@ -39,46 +39,10 @@ const MorningWalkDashboard = () => {
 
   const chartData = useMemo(() => {
     if (!dateRange?.start || !dateRange?.end || !dailyLogs.length) {
-      console.log('Morning Walk Debug: Missing data', { 
-        dateRangeStart: dateRange?.start, 
-        dateRangeEnd: dateRange?.end, 
-        logsCount: dailyLogs.length 
-      });
       return [];
     }
 
-    console.log('Morning Walk Debug: Processing'); 
-    console.log('  - Total logs:', dailyLogs.length);
-    console.log('  - Date range start:', dateRange.start);
-    console.log('  - Date range end:', dateRange.end);
-    console.log('  - Sample log:', dailyLogs[0]);
-    console.log('  - Sample log keys:', Object.keys(dailyLogs[0] || {}));
-    
-    // Check for recent entries (last 10) and look for patterns
-    const recentEntries = dailyLogs.slice(0, 10);
-    console.log('  - Recent 10 entries dates:', recentEntries.map(log => log.log_date));
-    
-    // Check for 8/4 entry with multiple formats
-    const aug4Patterns = ['2025-08-04', '2025-8-4', '08-04-2025', '8-4-2025'];
-    let aug4Entry = null;
-    for (const pattern of aug4Patterns) {
-      aug4Entry = dailyLogs.find(log => log.log_date === pattern);
-      if (aug4Entry) {
-        console.log('  - Found 8/4 entry with pattern:', pattern, aug4Entry);
-        console.log('  - 8/4 morning_walk value:', aug4Entry.morning_walk, typeof aug4Entry.morning_walk);
-        break;
-      }
-    }
-    if (!aug4Entry) {
-      console.log('  - No 8/4 entry found with any pattern');
-      console.log('  - Sample recent dates to check format:', recentEntries.slice(0, 3).map(log => ({
-        date: log.log_date, 
-        morning_walk: log.morning_walk,
-        keys: Object.keys(log).filter(k => k.includes('walk') || k.includes('morning'))
-      })));
-    }
-
-    // Filter logs by date range and where morning_walk is true
+    // Filter logs by date range - include ALL logs in range, not just ones with morning_walk data
     const filteredLogs = dailyLogs.filter(log => {
       if (!log.log_date) return false;
       
@@ -86,36 +50,9 @@ const MorningWalkDashboard = () => {
       const startDate = new Date(dateRange.start.year, dateRange.start.month - 1, dateRange.start.day || 1);
       const endDate = new Date(dateRange.end.year, dateRange.end.month - 1, dateRange.end.day || 31);
       
-      const isInRange = logDate >= startDate && logDate <= endDate;
-      
-      // Debug specific dates
-      if (log.log_date.includes('2025-08-04')) {
-        console.log('Morning Walk Debug: Found 8/4 entry', {
-          logDate: log.log_date,
-          morningWalk: log.morning_walk,
-          logDateParsed: logDate,
-          startDate,
-          endDate,
-          isInRange
-        });
-      }
-      
-      return isInRange;
+      return logDate >= startDate && logDate <= endDate;
     });
 
-    console.log('Morning Walk Debug: Filtered logs');
-    console.log('  - Filtered count:', filteredLogs.length);
-    console.log('  - With morning_walk === true:', filteredLogs.filter(log => log.morning_walk === true).length);
-    console.log('  - With morning_walk truthy:', filteredLogs.filter(log => log.morning_walk).length);
-    
-    if (filteredLogs.length > 0) {
-      console.log('  - Sample filtered log:', filteredLogs[0]);
-      console.log('  - Sample morning_walk values:', filteredLogs.slice(0, 5).map(log => ({
-        date: log.log_date,
-        morning_walk: log.morning_walk,
-        type: typeof log.morning_walk
-      })));
-    }
 
     // Group by month and count morning walks
     const monthlyData = {};
@@ -201,7 +138,7 @@ const MorningWalkDashboard = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Morning Walk Analysis</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Tracking the consistency of morning walks. ({dailyLogs.length} total entries)
+            Tracking the consistency of morning walks. ({dailyLogs.length} total entries, {dailyLogs.filter(log => log.morning_walk === true).length} with walks)
           </p>
         </div>
         <JollyDateRangePicker
