@@ -14,6 +14,8 @@ import LoginPage from './pages/login';
 import ForgotPasswordPage from './pages/forgot-password';
 import UpdatePasswordPage from './pages/update-password';
 import DailyLogPage from './pages/DailyLogPage';
+import ImportPage from './pages/ImportPage';
+import DiagnosticsPage from './pages/DiagnosticsPage';
 
 // This layout component will be protected and includes the nav/sidebar
 const AppLayout = () => {
@@ -64,6 +66,8 @@ function App() {
           >
             <Route index element={<Homepage />} />
             <Route path="log" element={<DailyLogPage />} />
+            <Route path="import" element={<ImportPage />} />
+            <Route path="diagnostics" element={<DiagnosticsPage />} />
             <Route path="category/:categoryName" element={<CategoryPage />} />
             <Route path="habit/:habitName" element={<HabitDetailPage />} />
           </Route>

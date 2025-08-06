@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { today, getLocalTimeZone } from '@internationalized/date';
+import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date';
 import morningWalkData from '../data/morningWalkDataByYear.json';
 import { JollyDateRangePicker } from './ui/date-range-picker';
 
@@ -14,6 +14,25 @@ const MorningWalkDashboard = () => {
     start: today(getLocalTimeZone()).subtract({ years: 1 }),
     end: today(getLocalTimeZone()),
   });
+
+  const handleDateRangeChange = (newRange) => {
+    if (!newRange) return;
+    
+    // Convert plain objects to CalendarDate objects if needed
+    const convertToCalendarDate = (dateObj) => {
+      if (dateObj && typeof dateObj === 'object' && dateObj.year && dateObj.month) {
+        // If it's a plain object with year, month, day
+        return new CalendarDate(dateObj.year, dateObj.month, dateObj.day || 1);
+      }
+      // If it's already a CalendarDate or similar, return as is
+      return dateObj;
+    };
+
+    setDateRange({
+      start: convertToCalendarDate(newRange.start),
+      end: convertToCalendarDate(newRange.end),
+    });
+  };
 
   const chartData = useMemo(() => {
     if (!dateRange?.start || !dateRange?.end) {
@@ -45,7 +64,7 @@ const MorningWalkDashboard = () => {
         <JollyDateRangePicker
           label="Date Range"
           value={dateRange}
-          onChange={setDateRange}
+          onChange={handleDateRangeChange}
         />
       </div>
 

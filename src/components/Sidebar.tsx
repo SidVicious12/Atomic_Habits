@@ -1,8 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HiStar, HiFire, HiSun, HiMoon, HiLightningBolt, HiPlus, HiHome } from 'react-icons/hi';
+import { HiStar, HiFire, HiSun, HiMoon, HiLightningBolt, HiPlus, HiHome, HiGlobeAlt, HiChartBar } from 'react-icons/hi';
 
 const iconMap = {
+  // New category mappings
+  'Morning': HiSun,
+  'Intake': HiGlobeAlt,
+  'Night': HiMoon,
+  'Fitness': HiLightningBolt,
+  'Wellness': HiStar,
+  'Metrics': HiChartBar,
+  // Legacy mappings (keep for backward compatibility)
   'Key Habits': HiStar,
   'Addictive Habits': HiFire,
   'Morning Habits': HiSun,

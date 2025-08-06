@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, PlusCircle, Search, LogOut } from 'lucide-react';
+import { Bell, PlusCircle, Search, LogOut, Upload, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { useAuth } from '../hooks/useAuth';
@@ -37,6 +37,22 @@ export default function TopNav() {
           className="text-blue-600 hover:text-blue-700"
         >
           <PlusCircle className="h-6 w-6" />
+        </button>
+        <button
+          type="button"
+          title="Import Historical Data"
+          onClick={() => navigate('/import')}
+          className="text-green-600 hover:text-green-700"
+        >
+          <Upload className="h-6 w-6" />
+        </button>
+        <button
+          type="button"
+          title="Database Diagnostics"
+          onClick={() => navigate('/diagnostics')}
+          className="text-orange-600 hover:text-orange-700"
+        >
+          <Activity className="h-6 w-6" />
         </button>
         <Bell className="h-6 w-6 text-gray-600 cursor-pointer" />
         {user && (
