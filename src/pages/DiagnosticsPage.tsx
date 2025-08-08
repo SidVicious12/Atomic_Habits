@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getAllDailyLogs } from '../lib/daily-logs';
 import { useToast } from '../components/ui/toast';
+import DebugDashboard from '../components/DebugDashboard';
 
 interface DatabaseInfo {
   totalRecords: number;
@@ -183,6 +184,11 @@ export default function DiagnosticsPage() {
         >
           Back to Home
         </button>
+      </div>
+
+      {/* Debug Dashboard */}
+      <div className="mb-8">
+        <DebugDashboard />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
