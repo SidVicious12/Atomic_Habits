@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { today, getLocalTimeZone } from '@internationalized/date';
 import weightData from '../data/weightDataByYear.json';
-import { JollyDateRangePicker } from './ui/date-range-picker';
+import { SimpleDateRangePicker } from './ui/simple-date-range-picker';
 
 const allMonths = [
   "January", "February", "March", "April", "May", "June",
@@ -42,8 +42,8 @@ const WeightDashboard = () => {
           <h2 className="text-2xl font-bold text-gray-800">Weight Analysis</h2>
           <p className="text-sm text-gray-500 mt-1">Monthly average weight tracking.</p>
         </div>
-        <JollyDateRangePicker
-          label="Date Range"
+        <SimpleDateRangePicker
+          
           value={dateRange}
           onChange={setDateRange}
         />

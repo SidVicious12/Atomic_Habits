@@ -6,7 +6,7 @@ import { DataTable } from '../components/DataTable';
 import { supabase } from '../lib/supabase';
 import { RefreshCw } from 'lucide-react';
 import { HiSun, HiGlobeAlt, HiMoon, HiLightningBolt, HiStar, HiChartBar } from 'react-icons/hi';
-import { JollyDateRangePicker } from '../components/ui/date-range-picker';
+import { SimpleDateRangePicker } from '../components/ui/simple-date-range-picker';
 import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date';
 
 // Category icon mapping
@@ -22,33 +22,33 @@ const categoryIconMap = {
 // Mapping from URL category name to the metrics and their display titles/colors
 const categoryMetricMap = {
   Morning: [
-    { key: 'phone_on_wake', title: 'Phone on Wake', color: '#ff4d4f' },
-    { key: 'breakfast', title: 'Ate Breakfast', color: '#ff7300' },
-    { key: 'coffee', title: 'Coffee', color: '#8884d8' },
-    { key: 'morning_walk', title: 'Morning Walk', color: '#82ca9d' },
+    { key: 'phone_on_wake', title: 'Phone on Wake', color: '#ff4d4f', isNumeric: false },
+    { key: 'breakfast', title: 'Ate Breakfast', color: '#ff7300', isNumeric: false },
+    { key: 'coffee', title: 'Coffee', color: '#8884d8', isNumeric: false },
+    { key: 'morning_walk', title: 'Morning Walk', color: '#82ca9d', isNumeric: false },
   ],
   Intake: [
-    { key: 'water_bottles_count', title: 'Water Bottles', color: '#8884d8' },
-    { key: 'soda', title: 'Soda', color: '#ff7300' },
-    { key: 'alcohol', title: 'Alcohol', color: '#ffc658' },
-    { key: 'dabs_count', title: 'Dabs', color: '#82ca9d' },
-    { key: 'smoke', title: 'Smoke', color: '#d0ed57' },
+    { key: 'water_bottles_count', title: 'Water Bottles', color: '#8884d8', isNumeric: true },
+    { key: 'soda', title: 'Soda', color: '#ff7300', isNumeric: false },
+    { key: 'alcohol', title: 'Alcohol', color: '#ffc658', isNumeric: false },
+    { key: 'dabs_count', title: 'Dabs', color: '#82ca9d', isNumeric: true },
+    { key: 'smoke', title: 'Smoke', color: '#d0ed57', isNumeric: false },
   ],
   Night: [
-    { key: 'netflix_in_bed', title: 'Netflix in Bed', color: '#ff7300' },
-    { key: 'brushed_teeth_night', title: 'Brushed Teeth', color: '#82ca9d' },
-    { key: 'washed_face_night', title: 'Washed Face', color: '#ffc658' },
+    { key: 'netflix_in_bed', title: 'Netflix in Bed', color: '#ff7300', isNumeric: false },
+    { key: 'brushed_teeth_night', title: 'Brushed Teeth', color: '#82ca9d', isNumeric: false },
+    { key: 'washed_face_night', title: 'Washed Face', color: '#ffc658', isNumeric: false },
   ],
   Fitness: [
-    { key: 'workout', title: 'Workout', color: '#8884d8' },
-    { key: 'calories', title: 'Calories Burned', color: '#82ca9d' },
+    { key: 'workout', title: 'Workout', color: '#8884d8', isNumeric: false },
+    { key: 'calories', title: 'Calories Burned', color: '#82ca9d', isNumeric: true },
   ],
   Wellness: [
-    { key: 'day_rating', title: 'Day Rating (1-10)', color: '#8884d8' },
-    { key: 'pages_read_count', title: 'Pages Read', color: '#82ca9d' },
+    { key: 'day_rating', title: 'Day Rating (1-10)', color: '#8884d8', isNumeric: false },
+    { key: 'pages_read_count', title: 'Pages Read', color: '#82ca9d', isNumeric: true },
   ],
   Metrics: [
-    { key: 'weight_lbs', title: 'Weight (lbs)', color: '#8884d8' },
+    { key: 'weight_lbs', title: 'Weight (lbs)', color: '#8884d8', isNumeric: true },
   ],
 };
 
@@ -57,10 +57,7 @@ const CategoryPage = () => {
   const [allLogs, setAllLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dateRange, setDateRange] = useState({
-    start: new CalendarDate(2016, 1, 1), // Start from 2016 to include your historical data
-    end: today(getLocalTimeZone()),
-  });
+  const [dateRange, setDateRange] = useState(null); // Will be set after data loads
 
   const handleDateRangeChange = (newRange) => {
     if (!newRange) return;
@@ -90,8 +87,86 @@ const CategoryPage = () => {
     try {
       setLoading(true);
       const data = await getAllDailyLogs();
-      console.log(`Fetched ${data?.length || 0} daily log entries`);
+      console.log(`📊 DETAILED DATA ANALYSIS:`);
+      console.log(`Fetched ${data?.length || 0} daily log entries from Supabase`);
+      
       setAllLogs(data || []);
+      
+      // COMPREHENSIVE DATE RANGE ANALYSIS
+      if (data && data.length > 0) {
+        // Get all dates and analyze them
+        const allDates = data.map(log => log.log_date).filter(date => date);
+        const parsedDates = allDates.map(dateStr => new Date(dateStr)).filter(date => !isNaN(date.getTime()));
+        
+        console.log(`📅 DATE ANALYSIS:`);
+        console.log(`- Total records: ${data.length}`);
+        console.log(`- Records with dates: ${allDates.length}`);
+        console.log(`- Valid parsed dates: ${parsedDates.length}`);
+        
+        if (parsedDates.length > 0) {
+          const sortedDates = [...parsedDates].sort((a, b) => a - b);
+          const earliest = sortedDates[0];
+          const latest = sortedDates[sortedDates.length - 1];
+          
+          console.log(`📊 FULL RANGE DISCOVERED:`);
+          console.log(`- Earliest: ${earliest.toISOString().split('T')[0]} (${earliest.toLocaleDateString()})`);
+          console.log(`- Latest: ${latest.toISOString().split('T')[0]} (${latest.toLocaleDateString()})`);
+          console.log(`- Total span: ${Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24))} days`);
+          
+          // Show sample dates to understand distribution
+          const sampleDates = [0, Math.floor(parsedDates.length * 0.25), Math.floor(parsedDates.length * 0.5), Math.floor(parsedDates.length * 0.75), parsedDates.length - 1]
+            .map(i => sortedDates[i]?.toISOString().split('T')[0]).filter(Boolean);
+          console.log(`- Sample dates (quartiles): [${sampleDates.join(', ')}]`);
+          
+          // DETAILED COLUMN ANALYSIS
+          console.log(`🔍 DETAILED COLUMN ANALYSIS:`);
+          const sampleRecord = data[0];
+          console.log(`- Sample record keys:`, Object.keys(sampleRecord));
+          console.log(`- Sample record:`, sampleRecord);
+          
+          // Check for water bottles data in different periods
+          const waterBottlesData = data.filter(log => log.water_bottles_count !== null && log.water_bottles_count !== undefined);
+          console.log(`💧 WATER BOTTLES DETAILED ANALYSIS:`);
+          console.log(`- Records with water_bottles_count: ${waterBottlesData.length}/${data.length}`);
+          
+          // Check all possible water-related column names
+          const waterColumns = Object.keys(sampleRecord).filter(key => 
+            key.toLowerCase().includes('water') || 
+            key.toLowerCase().includes('bottle') ||
+            key.toLowerCase().includes('drink')
+          );
+          console.log(`- Water-related columns found:`, waterColumns);
+          
+          // Check for any numeric columns that might be water bottles
+          const numericColumns = Object.keys(sampleRecord).filter(key => {
+            const value = sampleRecord[key];
+            return typeof value === 'number' && value !== null;
+          });
+          console.log(`- Numeric columns in sample:`, numericColumns);
+          
+          // Show all unique values for water_bottles_count to see what's actually there
+          const allWaterValues = data.map(log => log.water_bottles_count);
+          const uniqueWaterValues = [...new Set(allWaterValues)];
+          console.log(`- All unique water_bottles_count values:`, uniqueWaterValues);
+          console.log(`- Types of water values:`, uniqueWaterValues.map(v => typeof v));
+          
+          if (waterBottlesData.length > 0) {
+            const waterDates = waterBottlesData.map(log => log.log_date).sort();
+            console.log(`- Water data date range: ${waterDates[0]} to ${waterDates[waterDates.length - 1]}`);
+            console.log(`- Sample water values: [${waterBottlesData.slice(0, 5).map(log => log.water_bottles_count).join(', ')}]`);
+          } else {
+            console.log(`❌ NO WATER BOTTLES DATA FOUND - This is the problem!`);
+          }
+          
+          // Always reset to show ALL data - this will override any previous date range
+          setDateRange({
+            start: new CalendarDate(earliest.getFullYear(), earliest.getMonth() + 1, earliest.getDate()),
+            end: new CalendarDate(latest.getFullYear(), latest.getMonth() + 1, latest.getDate())
+          });
+          
+          console.log(`✅ Set date range to FULL span: ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}`);
+        }
+      }
     } catch (err) {
       setError('Failed to fetch daily logs.');
       console.error(err);
@@ -267,8 +342,7 @@ const CategoryPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <JollyDateRangePicker
-            label="Date Range"
+          <SimpleDateRangePicker
             value={dateRange}
             onChange={handleDateRangeChange}
           />
@@ -328,19 +402,21 @@ const CategoryPage = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-8">
         {metricsToShow.length > 0 ? (
           metricsToShow.map(metric => (
-            <MetricChart 
-              key={`${categoryName}-${metric.key}-${logs.length}`} 
-              data={logs} 
-              metricKey={metric.key} 
-              title={metric.title} 
-              lineColor={metric.color}
-            />
+            <div key={`${categoryName}-${metric.key}-${logs.length}`} className="w-full">
+              <MetricChart 
+                data={logs} 
+                metricKey={metric.key} 
+                title={metric.title} 
+                lineColor={metric.color}
+                isNumeric={metric.isNumeric}
+              />
+            </div>
           ))
         ) : (
-          <div className="col-span-full p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-gray-500">
             <p>No metrics defined for this category.</p>
           </div>
         )}

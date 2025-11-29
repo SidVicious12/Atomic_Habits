@@ -113,63 +113,57 @@ function JollyDateRangePicker({
   
   const presets = [
     { 
-      label: "All time", 
+      label: "All My Data", 
       getValue: () => {
-        const today = new Date();
         return {
-          start: { year: 2016, month: 1, day: 1 }, // Start from 2016 to include your historical data
-          end: { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() }
+          start: { year: 2016, month: 11, day: 1 }, // Nov 2016 based on your actual data
+          end: { year: 2017, month: 11, day: 30 }   // Nov 2017 based on your actual data
         };
       },
       primary: true
     },
     { 
-      label: "2016 Data", 
+      label: "2016 Only", 
       getValue: () => {
         return {
-          start: { year: 2016, month: 1, day: 1 },
+          start: { year: 2016, month: 11, day: 1 },
           end: { year: 2016, month: 12, day: 31 }
         };
       }
     },
     { 
-      label: "2017-2020", 
+      label: "2017 Only", 
       getValue: () => {
         return {
           start: { year: 2017, month: 1, day: 1 },
-          end: { year: 2020, month: 12, day: 31 }
+          end: { year: 2017, month: 11, day: 30 }
         };
       }
     },
     { 
-      label: "Recent (2020+)", 
+      label: "Q4 2016", 
       getValue: () => {
-        const today = new Date();
         return {
-          start: { year: 2020, month: 1, day: 1 },
-          end: { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() }
+          start: { year: 2016, month: 10, day: 1 },
+          end: { year: 2016, month: 12, day: 31 }
         };
       }
     },
     { 
-      label: "Last Year", 
+      label: "Q1 2017", 
       getValue: () => {
-        const today = new Date();
-        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
         return {
-          start: { year: oneYearAgo.getFullYear(), month: oneYearAgo.getMonth() + 1, day: oneYearAgo.getDate() },
-          end: { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() }
+          start: { year: 2017, month: 1, day: 1 },
+          end: { year: 2017, month: 3, day: 31 }
         };
       }
     },
     { 
-      label: "Last 6 Months", 
+      label: "Recent 6 Months", 
       getValue: () => {
-        const today = new Date();
-        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate());
         return {
-          start: { year: sixMonthsAgo.getFullYear(), month: sixMonthsAgo.getMonth() + 1, day: sixMonthsAgo.getDate() },
-          end: { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() }
+          start: { year: 2017, month: 6, day: 1 },
+          end: { year: 2017, month: 11, day: 30 }
         };
       }
     }
@@ -264,7 +258,7 @@ function JollyDateRangePicker({
                 </div>
                 
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  📊 Your data is primarily from 2016
+                  📊 Your data spans Nov 2016 - Nov 2017
                 </p>
               </div>
               

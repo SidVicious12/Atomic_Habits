@@ -9,6 +9,7 @@ interface MetricChartProps {
   metricKey: string;
   title: string;
   lineColor?: string;
+  isNumeric?: boolean;
 }
 
 const formatXAxis = (tickItem: string) => {
@@ -52,15 +53,44 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title, lineColor = '#8884d8' }) => {
+export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title, lineColor = '#8884d8', isNumeric = false }) => {
   console.log(`MetricChart ${title}: received ${data.length} records`);
-  console.log(`Sample data for ${metricKey}:`, data.slice(0, 3).map(item => ({ date: item.log_date, value: item[metricKey] })));
+  console.log(`Sample data for ${metricKey}:`, data.slice(0, 5).map(item => ({ 
+    date: item.log_date, 
+    value: item[metricKey], 
+    type: typeof item[metricKey],
+    raw: JSON.stringify(item[metricKey])
+  })));
+  
+  // Special debugging for water bottles
+  if (metricKey === 'water_bottles_count') {
+    console.log('🔍 WATER BOTTLES DEBUG:');
+    console.log('isNumeric prop:', isNumeric);
+    const allValues = data.map(item => item[metricKey]);
+    const uniqueValues = [...new Set(allValues)];
+    console.log('All unique values:', uniqueValues);
+    console.log('Value types:', uniqueValues.map(v => typeof v));
+    const nonNullValues = allValues.filter(v => v !== null && v !== undefined && v !== '');
+    console.log(`Non-null values: ${nonNullValues.length}/${data.length}`);
+    if (nonNullValues.length > 0) {
+      console.log('Sample non-null values:', nonNullValues.slice(0, 10));
+    }
+  }
   
   // Transform data and filter out entries where the metric is null or undefined
   const filteredData = data
     .filter(item => {
-      const hasValue = item[metricKey] != null && item[metricKey] !== undefined && item[metricKey] !== '';
-      return hasValue;
+      const value = item[metricKey];
+      // For boolean fields, accept false as valid data
+      if (typeof value === 'boolean') {
+        return true;
+      }
+      // For numeric fields, accept 0 as valid data
+      if (typeof value === 'number') {
+        return true;
+      }
+      // Filter out null, undefined, and empty strings
+      return value != null && value !== undefined && value !== '';
     })
     .map(item => ({
       ...item,
@@ -77,7 +107,7 @@ export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title
     const sortedData = [...filteredData].sort((a, b) => new Date(a.log_date) - new Date(b.log_date));
     
     // For boolean data, show weekly success rate; for numeric data, show weekly averages
-    const isBooleanData = sortedData.every(item => item[metricKey] === 0 || item[metricKey] === 1);
+    const isBooleanData = !isNumeric && sortedData.every(item => item[metricKey] === 0 || item[metricKey] === 1);
     
     const weeklyData = {};
     
@@ -123,19 +153,41 @@ export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title
   }, [filteredData, metricKey]);
 
   if (chartData.length === 0) {
+    // Analyze why there's no data
+    const nullCount = data.filter(item => item[metricKey] === null || item[metricKey] === undefined).length;
+    const emptyStringCount = data.filter(item => item[metricKey] === '').length;
+    const hasDataCount = data.length - nullCount - emptyStringCount;
+    
     return (
-      <div className="p-4 bg-white rounded-lg shadow-md">
+      <div className="p-4 bg-white rounded-lg shadow-md border-l-4 border-amber-400">
         <h3 className="text-lg font-semibold text-gray-700 mb-2">{title}</h3>
-        <p className="text-gray-500">No data available for this metric yet.</p>
-        <p className="text-xs text-gray-400 mt-2">
-          Total records: {data.length}, Records with {metricKey}: {filteredData.length}
-        </p>
+        <div className="bg-amber-50 p-3 rounded-md">
+          <p className="text-amber-800 font-medium mb-2">📊 Data Analysis</p>
+          <div className="text-sm text-amber-700 space-y-1">
+            <p>• Total records: <span className="font-medium">{data.length}</span></p>
+            <p>• Records with NULL values: <span className="font-medium">{nullCount}</span></p>
+            <p>• Records with empty values: <span className="font-medium">{emptyStringCount}</span></p>
+            <p>• Records with data: <span className="font-medium">{hasDataCount}</span></p>
+          </div>
+          {hasDataCount === 0 && (
+            <div className="mt-3 p-2 bg-amber-100 rounded text-amber-800 text-xs">
+              💡 <strong>Tip:</strong> This column appears to be empty in your database. 
+              You may need to add data for "{metricKey}" in your daily logs.
+            </div>
+          )}
+          {hasDataCount > 0 && filteredData.length === 0 && (
+            <div className="mt-3 p-2 bg-blue-100 rounded text-blue-800 text-xs">
+              💡 <strong>Note:</strong> Data exists but was filtered out during processing. 
+              Check the date range or data format.
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   // Check if this is boolean data (values are percentages 0-100 for boolean metrics)
-  const originalIsBooleanData = filteredData.length > 0 && filteredData.every(item => item[metricKey] === 0 || item[metricKey] === 1);
+  const originalIsBooleanData = !isNumeric && filteredData.length > 0 && filteredData.every(item => item[metricKey] === 0 || item[metricKey] === 1);
   
   const yAxisProps = originalIsBooleanData 
     ? {

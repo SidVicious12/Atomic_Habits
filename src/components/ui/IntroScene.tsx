@@ -23,7 +23,7 @@ function FloatingText() {
       anchorX="center"
       anchorY="middle"
     >
-      Atomic Habits
+      HabitLoop
     </Text>
   );
 }

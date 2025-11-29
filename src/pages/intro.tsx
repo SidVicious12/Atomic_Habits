@@ -25,7 +25,7 @@ const IntroPage: React.FC = () => {
             </h1>
             <h2 className="text-6xl md:text-8xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                Atomic Habits
+                HabitLoop
               </span>
             </h2>
           </div>

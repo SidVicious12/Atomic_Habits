@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { today, getLocalTimeZone } from '@internationalized/date';
 import washedFaceData from '../data/washedFaceDataByYear.json';
-import { JollyDateRangePicker } from './ui/date-range-picker';
+import { SimpleDateRangePicker } from './ui/simple-date-range-picker';
 
 const allMonths = [
   "January", "February", "March", "April", "May", "June",
@@ -42,8 +42,8 @@ const WashFaceDashboard = () => {
           <h2 className="text-2xl font-bold text-gray-800">Wash Face at Night Analysis</h2>
           <p className="text-sm text-gray-500 mt-1">Date range analysis of washing face habit.</p>
         </div>
-        <JollyDateRangePicker
-          label="Date Range"
+        <SimpleDateRangePicker
+          
           value={dateRange}
           onChange={setDateRange}
         />

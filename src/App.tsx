@@ -1,76 +1,102 @@
 import React from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { ToastProvider } from './components/ui/toast';
 import { ErrorBoundary } from './lib/error-boundary';
+import { useAuth } from './hooks/useAuth';
 import './styles/responsive-3d.css';
 
 import Sidebar from './components/Sidebar';
-import TopNav from './components/TopNav';
+import TopBar from './components/TopBar';
 import Homepage from './pages/Homepage';
 import CategoryPage from './pages/CategoryPage';
 import HabitDetailPage from './pages/HabitDetailPage';
-import { RequireAuth } from './components/auth/RequireAuth';
-import LoginPage from './pages/login';
-import ForgotPasswordPage from './pages/forgot-password';
-import UpdatePasswordPage from './pages/update-password';
 import DailyLogPage from './pages/DailyLogPage';
-import ImportPage from './pages/ImportPage';
-import DiagnosticsPage from './pages/DiagnosticsPage';
+import LoginPage from './pages/login';
 
-// This layout component will be protected and includes the nav/sidebar
-const AppLayout = () => {
-  // Static categories reflecting the new daily log structure
-  const categories = [
-    'Morning', 
-    'Intake', 
-    'Night',
-    'Fitness',
-    'Wellness',
-    'Metrics'
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-foreground">
-      <TopNav />
-      <div className="flex flex-1">
-        <Sidebar categories={categories} />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <Outlet /> {/* This renders the nested child route */}
-        </main>
+// Protected route wrapper - redirects to login if not authenticated
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, loading, isConfigured } = useAuth();
+  
+  // If Supabase isn't configured, allow access (for development)
+  if (!isConfigured) {
+    return <>{children}</>;
+  }
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
-    </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// This layout component includes the nav/sidebar
+const AppLayout = () => {
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 font-sans text-foreground">
+        <Sidebar />
+        <TopBar />
+        {/* Main content area - offset for fixed sidebar and top bar */}
+        <div className="lg:ml-72 transition-all duration-300 pt-16">
+          <main className="min-h-screen p-6 overflow-y-auto">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </ProtectedRoute>
   );
 };
 
-import IntroPage from './pages/intro';
+// Layout for log page (with sidebar and top bar)
+const LogLayout = () => {
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-foreground">
+        <Sidebar />
+        <TopBar />
+        <div className="lg:ml-72 transition-all duration-300 pt-16">
+          <main className="flex-1 overflow-y-auto">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+};
 
 function App() {
   return (
     <ErrorBoundary>
       <ToastProvider>
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<IntroPage />} />
+          {/* Login page - public */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/update-password" element={<UpdatePasswordPage />} />
-
-          {/* Protected routes */}
-          <Route 
-            path="/*" 
-            element={
-              <RequireAuth>
-                <AppLayout />
-              </RequireAuth>
-            }
-          >
+          
+          {/* Main application routes - protected */}
+          <Route path="/" element={<AppLayout />}>
             <Route index element={<Homepage />} />
-            <Route path="log" element={<DailyLogPage />} />
-            <Route path="import" element={<ImportPage />} />
-            <Route path="diagnostics" element={<DiagnosticsPage />} />
             <Route path="category/:categoryName" element={<CategoryPage />} />
             <Route path="habit/:habitName" element={<HabitDetailPage />} />
           </Route>
+
+          {/* Log page (protected) */}
+          <Route element={<LogLayout />}>
+            <Route path="/log" element={<DailyLogPage />} />
+          </Route>
+
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ToastProvider>
     </ErrorBoundary>

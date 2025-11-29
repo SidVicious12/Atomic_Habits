@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date';
-import { JollyDateRangePicker } from './ui/date-range-picker';
+import { SimpleDateRangePicker } from './ui/simple-date-range-picker';
 import { useDailyLogs } from '../hooks/useDailyLogs';
 
 const allMonths = [
@@ -21,7 +21,7 @@ const LiveHabitDashboard = ({
   isNumeric = false 
 }) => {
   const [dateRange, setDateRange] = useState({
-    start: new CalendarDate(2025, 2, 1), // Start from Feb 2025 to include recent data
+    start: new CalendarDate(2024, 1, 1), // Start from beginning of 2024 to include all data
     end: today(getLocalTimeZone()),
   });
 
@@ -29,25 +29,14 @@ const LiveHabitDashboard = ({
   const { data: dailyLogs = [], isLoading, error } = useDailyLogs();
 
   const handleDateRangeChange = (newRange) => {
+    console.log('Received date range change:', newRange);
     if (!newRange || !newRange.start || !newRange.end) return;
     
-    const convertToCalendarDate = (dateObj) => {
-      if (!dateObj) return null;
-      if (dateObj && typeof dateObj === 'object' && dateObj.year && dateObj.month) {
-        return new CalendarDate(dateObj.year, dateObj.month, dateObj.day || 1);
-      }
-      return dateObj;
-    };
-
-    const newStart = convertToCalendarDate(newRange.start);
-    const newEnd = convertToCalendarDate(newRange.end);
-    
-    if (newStart && newEnd) {
-      setDateRange({
-        start: newStart,
-        end: newEnd,
-      });
-    }
+    // SimpleDateRangePicker already returns CalendarDate objects, so no conversion needed
+    setDateRange({
+      start: newRange.start,
+      end: newRange.end,
+    });
   };
 
   const chartData = useMemo(() => {
@@ -217,8 +206,7 @@ const LiveHabitDashboard = ({
             {description || `Tracking ${title.toLowerCase()}.`} ({dailyLogs.length} total entries, {entriesWithHabit} with {title.toLowerCase()})
           </p>
         </div>
-        <JollyDateRangePicker
-          label="Date Range"
+        <SimpleDateRangePicker
           value={dateRange}
           onChange={handleDateRangeChange}
         />
@@ -234,16 +222,33 @@ const LiveHabitDashboard = ({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
-              <YAxis tick={{ fontSize: 12 }} />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 12 }} 
+                angle={-45} 
+                textAnchor="end" 
+                height={60} 
+                interval={0}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }} 
+                allowDecimals={false}
+                domain={[0, 'dataMax + 2']}
+                label={{ 
+                  value: isNumeric ? 'Average' : 'Days Count', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle' }
+                }}
+              />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
               <Bar 
                 dataKey="value" 
                 fill={color} 
-                name={title} 
+                name={isNumeric ? `Avg ${title}` : `${title} (Days)`}
                 radius={[2, 2, 0, 0]} 
               />
             </BarChart>

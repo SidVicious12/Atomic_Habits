@@ -1,7 +1,7 @@
 import React, { useState, useMemo, Suspense } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { today, getLocalTimeZone } from '@internationalized/date';
-import { JollyDateRangePicker } from './ui/date-range-picker';
+import { SimpleDateRangePicker } from './ui/simple-date-range-picker';
 import { ErrorBoundary } from '@/lib/error-boundary';
 import { useToast } from './ui/toast';
 
@@ -133,7 +133,7 @@ function GenericDashboardContent({ config, className = "" }: GenericDashboardPro
 
       {/* Date Range Picker */}
       <div className="mb-6">
-        <JollyDateRangePicker
+        <SimpleDateRangePicker
           value={dateRange}
           onChange={handleDateRangeChange}
           className="w-full max-w-sm"

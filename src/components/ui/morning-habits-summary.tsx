@@ -5,7 +5,7 @@
 import React, { useState, useMemo } from 'react';
 import { AreaChart, AreaSeries, Area, Gradient, GradientStop, LinearXAxis, LinearYAxis, GridlineSeries, Gridline, LinearXAxisTickSeries, LinearXAxisTickLabel, LinearYAxisTickSeries } from 'reaviz';
 import { IconCoffee, IconToolsKitchen2, IconDeviceMobile, IconWalk } from '@tabler/icons-react';
-import { JollyDateRangePicker } from './date-range-picker';
+import { SimpleDateRangePicker } from './simple-date-range-picker';
 import { today, getLocalTimeZone } from '@internationalized/date';
 import { isWithinInterval } from 'date-fns';
 
@@ -103,8 +103,7 @@ export const MorningHabitsSummary: React.FC = () => {
     <div className="rounded-xl shadow-md p-6 bg-white dark:bg-black space-y-6 w-full max-w-4xl mx-auto">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Morning Habits Overview</h3>
-        <JollyDateRangePicker
-          label="Date Range"
+        <SimpleDateRangePicker
           value={dateRange}
           onChange={setDateRange}
           className="w-auto"

@@ -131,7 +131,7 @@ export default function ImprovedDailyLogForm() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Daily Habit Log</h1>
-              <p className="text-gray-600 mt-1">Track your atomic habits and build extraordinary results</p>
+              <p className="text-gray-600 mt-1">Track your habits and build extraordinary results</p>
             </div>
             
             {/* Mode Toggle */}

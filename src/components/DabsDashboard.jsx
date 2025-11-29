@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { today, getLocalTimeZone } from '@internationalized/date';
 import dabsData from '../data/dabsDataByYear.json';
-import { JollyDateRangePicker } from './ui/date-range-picker';
+import { SimpleDateRangePicker } from './ui/simple-date-range-picker';
 
 const allMonths = [
   "January", "February", "March", "April", "May", "June",
@@ -42,8 +42,8 @@ const DabsDashboard = () => {
           <h2 className="text-2xl font-bold text-gray-800"># of Dabs Analysis</h2>
           <p className="text-sm text-gray-500 mt-1">Date range analysis of dabs habit.</p>
         </div>
-        <JollyDateRangePicker
-          label="Date Range"
+        <SimpleDateRangePicker
+          
           value={dateRange}
           onChange={setDateRange}
         />

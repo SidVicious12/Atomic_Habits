@@ -130,7 +130,7 @@ function HeroTitle() {
         outlineWidth={0.02}
         outlineColor="#4F46E5"
       >
-        ATOMIC HABITS
+        HABITLOOP
       </Text>
       <Text
         position={[0, -0.8, 0]}
@@ -168,7 +168,7 @@ const InteractiveHero3D: React.FC<InteractiveHero3DProps> = ({ onGetStarted }) =
   }, []);
 
   const handleGetStarted = () => {
-    success("Welcome to Atomic Habits!", "Let's start building better habits together.");
+    success("Welcome to HabitLoop!", "Let's start building better habits together.");
     if (onGetStarted) {
       onGetStarted();
     } else {
