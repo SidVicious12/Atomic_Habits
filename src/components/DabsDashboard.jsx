@@ -4,7 +4,7 @@ import LiveHabitDashboard from './LiveHabitDashboard';
 const DabsDashboard = () => {
   return (
     <LiveHabitDashboard
-      habitKey="dabs_count"
+      habitKey="#_of_dabs"
       title="# of Dabs Analysis"
       color="#f97316"
       description="Tracking dabs consumption"

@@ -4,7 +4,7 @@ import LiveHabitDashboard from './LiveHabitDashboard';
 const RelaxDashboard = () => {
   return (
     <LiveHabitDashboard
-      habitKey="relaxed_today"
+      habitKey="relax?"
       title="Relax Analysis"
       color="#22c55e"
       description="Tracking relaxation habits"

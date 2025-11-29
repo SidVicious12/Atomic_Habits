@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { getAllDailyLogs } from '../lib/daily-logs';
+import { getAllDailyLogsFromSheets } from '../lib/google-sheets';
 import { MetricChart } from '../components/MetricChart';
 import { DataTable } from '../components/DataTable';
 import { supabase } from '../lib/supabase';
@@ -20,35 +20,43 @@ const categoryIconMap = {
 };
 
 // Mapping from URL category name to the metrics and their display titles/colors
+// Keys match Google Sheets column headers (lowercase, spaces→underscores)
 const categoryMetricMap = {
   Morning: [
-    { key: 'phone_on_wake', title: 'Phone on Wake', color: '#ff4d4f', isNumeric: false },
-    { key: 'breakfast', title: 'Ate Breakfast', color: '#ff7300', isNumeric: false },
-    { key: 'coffee', title: 'Coffee', color: '#8884d8', isNumeric: false },
-    { key: 'morning_walk', title: 'Morning Walk', color: '#82ca9d', isNumeric: false },
+    { key: 'did_i_use_my_phone_for_social_media_30_mins_after_waking_up?', title: 'Phone on Wake', description: 'Did I use my phone for Social Media 30 mins after waking up?', color: '#ff4d4f', isNumeric: false },
+    { key: 'breakfast', title: 'Ate Breakfast', description: 'Did I eat breakfast today?', color: '#ff7300', isNumeric: false },
+    { key: 'coffee', title: 'Coffee', description: 'Did I have coffee?', color: '#8884d8', isNumeric: false },
+    { key: 'morning_walk', title: 'Morning Walk', description: 'Did I take a morning walk?', color: '#82ca9d', isNumeric: false },
   ],
   Intake: [
-    { key: 'water_bottles_count', title: 'Water Bottles', color: '#8884d8', isNumeric: true },
-    { key: 'soda', title: 'Soda', color: '#ff7300', isNumeric: false },
-    { key: 'alcohol', title: 'Alcohol', color: '#ffc658', isNumeric: false },
-    { key: 'dabs_count', title: 'Dabs', color: '#82ca9d', isNumeric: true },
-    { key: 'smoke', title: 'Smoke', color: '#d0ed57', isNumeric: false },
+    { key: '#_of_bottles_of_water_drank?', title: 'Water Bottles', description: '# of Bottles of Water Drank', color: '#8884d8', isNumeric: true },
+    { key: 'soda', title: 'Soda', description: 'Did I drink soda?', color: '#ff7300', isNumeric: false },
+    { key: 'drink', title: 'Alcohol', description: 'Did I drink alcohol?', color: '#ffc658', isNumeric: false },
+    { key: '#_of_dabs', title: 'Dabs', description: '# of Dabs', color: '#82ca9d', isNumeric: true },
+    { key: 'smoke', title: 'Smoke', description: 'Did I smoke?', color: '#d0ed57', isNumeric: false },
+    { key: 'green_tea', title: 'Green Tea', description: 'Did I drink green tea?', color: '#52c41a', isNumeric: false },
+    { key: 'chocolate', title: 'Chocolate', description: 'Did I eat chocolate?', color: '#8b4513', isNumeric: false },
   ],
   Night: [
-    { key: 'netflix_in_bed', title: 'Netflix in Bed', color: '#ff7300', isNumeric: false },
-    { key: 'brushed_teeth_night', title: 'Brushed Teeth', color: '#82ca9d', isNumeric: false },
-    { key: 'washed_face_night', title: 'Washed Face', color: '#ffc658', isNumeric: false },
+    { key: 'did_i_watch_netflix_in_bed_last_night?', title: 'Netflix in Bed', description: 'Did I watch Netflix in bed last night?', color: '#ff7300', isNumeric: false },
+    { key: 'brush_teeth_at_night', title: 'Brushed Teeth', description: 'Did I brush teeth at night?', color: '#82ca9d', isNumeric: false },
+    { key: 'wash_face_at_night', title: 'Washed Face', description: 'Did I wash face at night?', color: '#ffc658', isNumeric: false },
+    { key: 'bed_time', title: 'Bed Time', description: 'What time did I go to bed?', color: '#722ed1', isNumeric: false },
   ],
   Fitness: [
-    { key: 'workout', title: 'Workout', color: '#8884d8', isNumeric: false },
-    { key: 'calories', title: 'Calories Burned', color: '#82ca9d', isNumeric: true },
+    { key: 'workout', title: 'Workout', description: 'Did I workout?', color: '#8884d8', isNumeric: false },
+    { key: '#_of_calories', title: 'Calories Burned', description: '# of Calories burned', color: '#82ca9d', isNumeric: true },
   ],
   Wellness: [
-    { key: 'day_rating', title: 'Day Rating (1-10)', color: '#8884d8', isNumeric: false },
-    { key: 'pages_read_count', title: 'Pages Read', color: '#82ca9d', isNumeric: true },
+    { key: 'how_was_my_day?', title: 'Day Rating', description: 'How was my day?', color: '#8884d8', isNumeric: false },
+    { key: 'number_of_pages_read', title: 'Pages Read', description: 'Number of pages read', color: '#82ca9d', isNumeric: true },
+    { key: 'relax?', title: 'Relaxed Today', description: 'Did I relax today?', color: '#13c2c2', isNumeric: false },
   ],
   Metrics: [
-    { key: 'weight_lbs', title: 'Weight (lbs)', color: '#8884d8', isNumeric: true },
+    { key: 'weight_in_lbs', title: 'Weight (lbs)', description: 'Weight in lbs', color: '#8884d8', isNumeric: true },
+    { key: 'time_awake', title: 'Time Awake', description: 'What time did I wake up?', color: '#faad14', isNumeric: false },
+    { key: 'time_at_work', title: 'Time at Work', description: 'What time did I arrive at work?', color: '#1890ff', isNumeric: false },
+    { key: 'time_left_work', title: 'Time Left Work', description: 'What time did I leave work?', color: '#eb2f96', isNumeric: false },
   ],
 };
 
@@ -86,9 +94,9 @@ const CategoryPage = () => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const data = await getAllDailyLogs();
+      const data = await getAllDailyLogsFromSheets();
       console.log(`📊 DETAILED DATA ANALYSIS:`);
-      console.log(`Fetched ${data?.length || 0} daily log entries from Supabase`);
+      console.log(`Fetched ${data?.length || 0} daily log entries from Google Sheets`);
       
       setAllLogs(data || []);
       
@@ -409,7 +417,8 @@ const CategoryPage = () => {
               <MetricChart 
                 data={logs} 
                 metricKey={metric.key} 
-                title={metric.title} 
+                title={metric.title}
+                description={metric.description}
                 lineColor={metric.color}
                 isNumeric={metric.isNumeric}
               />

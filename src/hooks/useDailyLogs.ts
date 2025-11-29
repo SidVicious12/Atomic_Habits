@@ -1,14 +1,15 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAllDailyLogsFromSheets, getLatestDailyLogFromSheets, type DailyLog } from '../lib/google-sheets';
+import { appendDailyLogToSheet, upsertDailyLogToSheet, isWriteConfigured, type DailyLogEntry } from '../lib/google-sheets-write';
 import { queryKeys } from '@/lib/react-query';
 
-// Hook for getting all daily logs with caching - NOW FROM GOOGLE SHEETS
+// Hook for getting all daily logs with caching - FROM GOOGLE SHEETS
 export function useDailyLogs() {
   return useQuery<DailyLog[], Error>({
     queryKey: queryKeys.dailyLogs,
     queryFn: getAllDailyLogsFromSheets,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in newer versions)
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
@@ -22,21 +23,42 @@ export function useLatestDailyLog() {
   });
 }
 
-// DEPRECATED: Write operations are no longer supported (read-only from Google Sheets)
-// To add new logs, update your Google Sheet directly
+// Hook for appending a new row to Google Sheets (never overwrites)
+export function useAppendDailyLog() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (entry: DailyLogEntry) => appendDailyLogToSheet(entry),
+    onSuccess: () => {
+      // Invalidate queries to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogs });
+      queryClient.invalidateQueries({ queryKey: ['latestDailyLog'] });
+    },
+    onError: (error) => {
+      console.error('Failed to append daily log:', error);
+    },
+  });
+}
+
+// Hook for upserting (update if exists, insert if not) to Google Sheets
 export function useUpsertDailyLog() {
-  return {
-    mutate: () => {
-      console.warn('Write operations are disabled. Please update Google Sheets directly.');
-      alert('This app is now read-only. Please update your Google Sheet to add new logs.');
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (entry: DailyLogEntry) => upsertDailyLogToSheet(entry),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogs });
+      queryClient.invalidateQueries({ queryKey: ['latestDailyLog'] });
     },
-    mutateAsync: async () => {
-      throw new Error('Write operations are disabled. Please update Google Sheets directly.');
+    onError: (error) => {
+      console.error('Failed to upsert daily log:', error);
     },
-    isPending: false,
-    isError: false,
-    isSuccess: false,
-  };
+  });
+}
+
+// Check if write functionality is available
+export function useCanWrite() {
+  return isWriteConfigured();
 }
 
 // Hook for cache management

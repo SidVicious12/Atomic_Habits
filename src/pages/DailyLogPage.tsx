@@ -1,9 +1,12 @@
 import React from 'react';
-import ImprovedDailyLogForm from '@/components/ImprovedDailyLogForm';
+import { QuickDailyEntry } from '@/components/QuickDailyEntry';
+import { useNavigate } from 'react-router-dom';
 
 const DailyLogPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   return (
-    <ImprovedDailyLogForm />
+    <QuickDailyEntry onSuccess={() => navigate('/')} />
   );
 };
 

@@ -90,7 +90,7 @@ export async function fetchGoogleSheetsData(range?: string): Promise<any[]> {
       }
     }
     
-    const sheetRange = range || `'${sheetName}'!A:Z`;
+    const sheetRange = range || `'${sheetName}'!A:AZ`;
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/${encodeURIComponent(sheetRange)}?key=${GOOGLE_API_KEY}`;
     
     console.log('📡 Fetching from Google Sheets:', { sheetName, sheetRange });
@@ -136,14 +136,30 @@ export function parseSheetData(rows: any[][]): DailyLog[] {
       } else if (header.includes('date')) {
         // Parse date fields
         log[header] = parseGoogleSheetsDate(value);
-      } else if (header.includes('count') || header.includes('weight') || header.includes('calories') || header.includes('rating')) {
+      } else if (header.includes('#_of') || header.includes('number_of') || header.includes('count') || header.includes('weight') || header.includes('calories') || header.includes('rating')) {
         // Parse numeric fields
-        log[header] = parseFloat(value) || null;
-      } else if (value === 'TRUE' || value === 'true' || value === '1' || value === 'yes' || value === 'Yes') {
-        // Parse boolean fields
-        log[header] = true;
-      } else if (value === 'FALSE' || value === 'false' || value === '0' || value === 'no' || value === 'No') {
-        log[header] = false;
+        const numValue = parseFloat(value);
+        log[header] = isNaN(numValue) ? null : numValue;
+      } else if (typeof value === 'string') {
+        // Trim the value and check for boolean patterns (case-insensitive)
+        const trimmedValue = value.trim();
+        const lowerValue = trimmedValue.toLowerCase();
+        
+        // Check for YES/TRUE/1/Y variations
+        if (lowerValue === 'true' || lowerValue === 'yes' || lowerValue === 'y' || lowerValue === '1' || lowerValue === 'x' || lowerValue === '✓' || lowerValue === '✔') {
+          log[header] = true;
+        } 
+        // Check for NO/FALSE/0/N variations
+        else if (lowerValue === 'false' || lowerValue === 'no' || lowerValue === 'n' || lowerValue === '0') {
+          log[header] = false;
+        }
+        // Check if it's a number that wasn't caught above
+        else if (!isNaN(parseFloat(trimmedValue)) && isFinite(Number(trimmedValue))) {
+          log[header] = parseFloat(trimmedValue);
+        }
+        else {
+          log[header] = trimmedValue;
+        }
       } else {
         log[header] = value;
       }
@@ -151,6 +167,11 @@ export function parseSheetData(rows: any[][]): DailyLog[] {
 
     // Add synthetic ID
     log.id = `row_${index + 2}`; // +2 because index starts at 0 and we skip header
+
+    // Map 'date' field to 'log_date' for compatibility
+    if (log.date && !log.log_date) {
+      log.log_date = log.date;
+    }
 
     return log as DailyLog;
   });
@@ -201,6 +222,22 @@ export async function getAllDailyLogsFromSheets(): Promise<DailyLog[]> {
     if (logs.length > 0) {
       console.log('📋 Sample log:', logs[0]);
       console.log('📋 Available columns:', Object.keys(logs[0]));
+      
+      // Debug: Show sample values for key columns
+      const debugColumns = [
+        'did_i_use_my_phone_for_social_media_30_mins_after_waking_up?',
+        '#_of_bottles_of_water_drank?',
+        'drink',
+        '#_of_dabs',
+        'breakfast',
+        'coffee'
+      ];
+      console.log('🔍 DEBUG - Sample values for key columns:');
+      debugColumns.forEach(col => {
+        const values = logs.slice(0, 10).map(log => log[col]);
+        const nonNullCount = logs.filter(log => log[col] !== null && log[col] !== undefined).length;
+        console.log(`  ${col}: [${values.join(', ')}] (${nonNullCount}/${logs.length} non-null)`);
+      });
     }
 
     return logs;

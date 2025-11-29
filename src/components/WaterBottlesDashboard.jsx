@@ -4,7 +4,7 @@ import LiveHabitDashboard from './LiveHabitDashboard';
 const WaterBottlesDashboard = () => {
   return (
     <LiveHabitDashboard
-      habitKey="water_bottles_count"
+      habitKey="#_of_bottles_of_water_drank?"
       title="Water Bottles Analysis"
       color="#36a2eb"
       description="Daily water consumption tracking over time"

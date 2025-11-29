@@ -8,6 +8,7 @@ interface MetricChartProps {
   data: any[];
   metricKey: string;
   title: string;
+  description?: string;
   lineColor?: string;
   isNumeric?: boolean;
 }
@@ -53,7 +54,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title, lineColor = '#8884d8', isNumeric = false }) => {
+export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title, description, lineColor = '#8884d8', isNumeric = false }) => {
   console.log(`MetricChart ${title}: received ${data.length} records`);
   console.log(`Sample data for ${metricKey}:`, data.slice(0, 5).map(item => ({ 
     date: item.log_date, 
@@ -160,7 +161,10 @@ export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title
     
     return (
       <div className="p-4 bg-white rounded-lg shadow-md border-l-4 border-amber-400">
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">{title}</h3>
+        <div className="mb-2">
+          <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
+          {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+        </div>
         <div className="bg-amber-50 p-3 rounded-md">
           <p className="text-amber-800 font-medium mb-2">📊 Data Analysis</p>
           <div className="text-sm text-amber-700 space-y-1">
@@ -198,7 +202,10 @@ export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">{title}</h3>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
+        {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartData}

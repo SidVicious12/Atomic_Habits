@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { InfinityLoop } from "@/components/ui/infinity-loop";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 // Utility for conditional classnames
 const cn = (...classes: (string | false | null | undefined)[]) =>
@@ -21,6 +21,12 @@ const SignInCard: React.FC = () => {
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      setError("Authentication is not configured. Please set up Supabase credentials in your .env file.");
+      return;
+    }
 
     if (step === "email") {
       if (!email) return;
@@ -175,7 +181,7 @@ const SignInPage: React.FC = () => {
       </div>
 
       {/* Login card below infinity loop */}
-      <div className="absolute top-[55%] inset-x-0 flex justify-center z-20 px-4">
+      <div className="absolute top-[60%] inset-x-0 flex justify-center z-20 px-4">
         <SignInCard />
       </div>
 

@@ -4,7 +4,7 @@ import LiveHabitDashboard from './LiveHabitDashboard';
 const PagesReadDashboard = () => {
   return (
     <LiveHabitDashboard
-      habitKey="pages_read_count"
+      habitKey="number_of_pages_read"
       title="Pages Read Analysis"
       color="#4ecdc4"
       description="Daily reading progress tracking"

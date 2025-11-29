@@ -4,6 +4,36 @@ import { useDailyLogs } from '@/hooks/useDailyLogs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { ArrowLeft, TrendingUp, Calendar, Award } from 'lucide-react';
 import TimeAwakeChart from '@/components/TimeAwakeChart';
+import { MonthlyTrendCharts } from '@/components/MonthlyTrendChart';
+import { computeMonthlyChartData } from '@/lib/monthly-chart-utils';
+
+// Map URL-friendly habit keys to actual Google Sheets column names
+const habitKeyToColumn: Record<string, string> = {
+  time_awake: 'time_awake',
+  time_at_work: 'time_at_work',
+  time_left_work: 'time_left_work',
+  morning_walk: 'morning_walk',
+  coffee: 'coffee',
+  breakfast: 'breakfast',
+  phone_on_wake: 'did_i_use_my_phone_for_social_media_30_mins_after_waking_up?',
+  water_bottles_count: '#_of_bottles_of_water_drank?',
+  green_tea: 'green_tea',
+  alcohol: 'drink',
+  soda: 'soda',
+  smoke: 'smoke',
+  dabs_count: '#_of_dabs',
+  brushed_teeth_night: 'brush_teeth_at_night',
+  washed_face_night: 'wash_face_at_night',
+  netflix_in_bed: 'did_i_watch_netflix_in_bed_last_night?',
+  workout: 'workout',
+  calories: '#_of_calories',
+  pages_read_count: 'number_of_pages_read',
+  relaxed_today: 'relax?',
+  day_rating: 'how_was_my_day?',
+  weight_lbs: 'weight_in_lbs',
+  chocolate: 'chocolate',
+  bed_time: 'bed_time',
+};
 
 // Map habit keys to human-readable names
 const habitDisplayNames: Record<string, string> = {
@@ -29,6 +59,8 @@ const habitDisplayNames: Record<string, string> = {
   relaxed_today: 'Relaxed Today',
   day_rating: 'Day Rating',
   weight_lbs: 'Weight (lbs)',
+  chocolate: 'Chocolate',
+  bed_time: 'Bed Time',
 };
 
 const habitTypes: Record<string, 'boolean' | 'numeric' | 'time'> = {
@@ -54,11 +86,16 @@ const habitTypes: Record<string, 'boolean' | 'numeric' | 'time'> = {
   relaxed_today: 'boolean',
   day_rating: 'numeric',
   weight_lbs: 'numeric',
+  chocolate: 'boolean',
+  bed_time: 'time',
 };
 
 const HabitDetailPage: React.FC = () => {
   const { habitName } = useParams<{ habitName: string }>();
   const { data: dailyLogs = [], isLoading, error } = useDailyLogs();
+  
+  // Get the actual Google Sheets column name for this habit
+  const columnName = habitName ? (habitKeyToColumn[habitName] || habitName) : '';
 
   if (!habitName) {
     return (
@@ -80,13 +117,13 @@ const HabitDetailPage: React.FC = () => {
   const timeChartData = useMemo(() => {
     if (!isTime || !dailyLogs.length) return [];
     return dailyLogs
-      .filter(log => log[habitName])
+      .filter(log => log[columnName])
       .map(log => ({
         date: log.log_date,
-        timeAwake: log[habitName] as string,
+        timeAwake: log[columnName] as string,
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [dailyLogs, habitName, isTime]);
+  }, [dailyLogs, columnName, isTime]);
 
   // Calculate habit statistics
   const habitStats = useMemo(() => {
@@ -103,7 +140,7 @@ const HabitDetailPage: React.FC = () => {
 
     // Filter logs with this habit tracked
     const logsWithHabit = dailyLogs.filter(log => {
-      const value = log[habitName];
+      const value = log[columnName];
       return isNumeric ? (typeof value === 'number' && value > 0) : value === true;
     });
 
@@ -121,7 +158,7 @@ const HabitDetailPage: React.FC = () => {
     for (let i = 0; i < sortedLogs.length; i++) {
       const logDate = new Date(sortedLogs[i].log_date);
       logDate.setHours(0, 0, 0, 0);
-      const value = sortedLogs[i][habitName];
+      const value = sortedLogs[i][columnName];
       const hasHabit = isNumeric ? (typeof value === 'number' && value > 0) : value === true;
 
       if (hasHabit) {
@@ -137,7 +174,7 @@ const HabitDetailPage: React.FC = () => {
 
     // Calculate average for numeric habits
     const averageValue = isNumeric && logsWithHabit.length > 0
-      ? logsWithHabit.reduce((sum, log) => sum + (log[habitName] as number), 0) / logsWithHabit.length
+      ? logsWithHabit.reduce((sum, log) => sum + (log[columnName] as number), 0) / logsWithHabit.length
       : 0;
 
     // Group by month
@@ -157,7 +194,7 @@ const HabitDetailPage: React.FC = () => {
       }
 
       monthlyData[monthKey].total++;
-      const value = log[habitName];
+      const value = log[columnName];
       if (isNumeric) {
         if (typeof value === 'number' && value > 0) {
           monthlyData[monthKey].count++;
@@ -181,7 +218,7 @@ const HabitDetailPage: React.FC = () => {
     // Get recent logs (last 10)
     const recentLogs = sortedLogs.slice(0, 10).map(log => ({
       date: new Date(log.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      value: log[habitName],
+      value: log[columnName],
     }));
 
     return {
@@ -192,7 +229,14 @@ const HabitDetailPage: React.FC = () => {
       monthlyData: monthlyDataArray,
       recentLogs,
     };
-  }, [dailyLogs, habitName, isNumeric]);
+  }, [dailyLogs, columnName, isNumeric]);
+
+  // Compute monthly chart data for the last 3 months (configurable)
+  const NUMBER_OF_MONTHS = 3;
+  const monthlyChartData = useMemo(() => {
+    if (!dailyLogs.length || isTime) return [];
+    return computeMonthlyChartData(dailyLogs, columnName, isNumeric, NUMBER_OF_MONTHS);
+  }, [dailyLogs, columnName, isNumeric, isTime]);
 
   if (isLoading) {
     return (
@@ -317,6 +361,15 @@ const HabitDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Monthly Trend Charts - Last 3 months with daily breakdown */}
+      {!isTime && monthlyChartData.length > 0 && (
+        <MonthlyTrendCharts
+          monthlyData={monthlyChartData}
+          isNumeric={isNumeric}
+          barColor="#8884d8"
+        />
       )}
 
       {/* Recent Activity - hidden for all habits as requested */}

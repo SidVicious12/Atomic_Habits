@@ -39,46 +39,93 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
+      console.log('⚠️ Supabase not configured, skipping auth')
       setLoading(false)
       return
     }
 
+    let isSubscribed = true
+
     // Set a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      console.warn('Auth check timed out, proceeding without authentication')
-      setLoading(false)
+      if (isSubscribed) {
+        console.warn('⏱️ Auth check timed out, proceeding without authentication')
+        setLoading(false)
+      }
     }, 5000) // 5 second timeout
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!isSubscribed) return
       clearTimeout(timeout)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
+
+      if (error) {
+        console.error('❌ Error getting session:', error)
+        setLoading(false)
+        return
       }
+
+      console.log('🔐 Initial session check:', session ? 'Authenticated' : 'No session')
+      setUser(session?.user ?? null)
+
+      // Fetch profile in background, don't block loading
+      if (session?.user) {
+        fetchProfile(session.user.id).catch(err => {
+          console.warn('Failed to fetch profile (non-blocking):', err)
+        })
+      }
+
       setLoading(false)
     }).catch((error) => {
+      if (!isSubscribed) return
       clearTimeout(timeout)
-      console.error('Error getting session:', error)
+      console.error('❌ Error getting session (catch):', error)
       setLoading(false)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
+      (event, session) => {
+        console.log('🔄 Auth state changed:', event, session ? 'has session' : 'no session')
 
-        if (session?.user) {
-          await fetchProfile(session.user.id)
-        } else {
+        // Handle specific events
+        if (event === 'SIGNED_OUT') {
+          console.log('👋 User signed out')
+          setUser(null)
           setProfile(null)
+          setLoading(false)
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          console.log('✅ User signed in or token refreshed')
+          setUser(session?.user ?? null)
+          // Fetch profile in background, don't block
+          if (session?.user) {
+            fetchProfile(session.user.id).catch(err => {
+              console.warn('Failed to fetch profile (non-blocking):', err)
+            })
+          }
+          setLoading(false)
+        } else if (event === 'USER_UPDATED') {
+          console.log('📝 User updated')
+          setUser(session?.user ?? null)
+          setLoading(false)
         }
-
-        setLoading(false)
+        // For other events, only update if we have a valid session
+        else if (session?.user) {
+          setUser(session.user)
+          // Fetch profile in background, don't block
+          fetchProfile(session.user.id).catch(err => {
+            console.warn('Failed to fetch profile (non-blocking):', err)
+          })
+          setLoading(false)
+        } else {
+          // No session for other events
+          setLoading(false)
+        }
       }
     )
 
     return () => {
+      isSubscribed = false
       clearTimeout(timeout)
       subscription.unsubscribe()
     }
