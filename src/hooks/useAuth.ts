@@ -43,12 +43,23 @@ export const useAuth = () => {
       return
     }
 
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.warn('Auth check timed out, proceeding without authentication')
+      setLoading(false)
+    }, 5000) // 5 second timeout
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout)
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
       }
+      setLoading(false)
+    }).catch((error) => {
+      clearTimeout(timeout)
+      console.error('Error getting session:', error)
       setLoading(false)
     })
 
@@ -56,18 +67,21 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null)
-        
+
         if (session?.user) {
           await fetchProfile(session.user.id)
         } else {
           setProfile(null)
         }
-        
+
         setLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Email/Password sign in

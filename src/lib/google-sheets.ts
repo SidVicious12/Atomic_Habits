@@ -29,6 +29,7 @@ export interface DailyLog {
   green_tea?: boolean;
   alcohol?: boolean;
   soda?: boolean;
+  chocolate?: boolean;
   smoke?: boolean;
   dabs_count?: number;
   brushed_teeth_night?: boolean;

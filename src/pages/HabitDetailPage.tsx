@@ -234,9 +234,8 @@ const HabitDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards - hide for time-based habits since TimeAwakeChart has its own stats */}
-      {/* Also hide for morning_walk as requested */}
-      {!isTime && habitName !== 'morning_walk' && (
+      {/* Stats Cards - hidden for all habits as requested */}
+      {false && !isTime && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-2">
@@ -320,9 +319,8 @@ const HabitDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Recent Activity - hide for time-based habits */}
-      {/* Also hide for morning_walk as requested */}
-      {!isTime && habitName !== 'morning_walk' && (
+      {/* Recent Activity - hidden for all habits as requested */}
+      {false && !isTime && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
           {habitStats.recentLogs.length > 0 ? (
