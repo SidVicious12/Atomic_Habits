@@ -1,13 +1,8 @@
 import React from 'react';
-import { QuickDailyEntry } from '@/components/QuickDailyEntry';
-import { useNavigate } from 'react-router-dom';
+import SteppedHabitForm from '@/components/SteppedHabitForm';
 
 const DailyLogPage: React.FC = () => {
-  const navigate = useNavigate();
-  
-  return (
-    <QuickDailyEntry onSuccess={() => navigate('/')} />
-  );
+  return <SteppedHabitForm />;
 };
 
 export default DailyLogPage;
