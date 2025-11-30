@@ -182,7 +182,7 @@ export default function TodayPage() {
   const isToday = formData.date === new Date().toISOString().split('T')[0];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50 pb-48">
       {/* Sticky Header with Date Picker */}
       <header className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 to-slate-800 text-white px-4 py-3 shadow-lg">
         <div className="flex items-center justify-between mb-2">
