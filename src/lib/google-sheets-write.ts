@@ -58,9 +58,20 @@ export function isWriteConfigured(): boolean {
  */
 function formatRowForSheet(entry: DailyLogEntry): any[] {
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const date = new Date(entry.date);
-  const dayName = dayNames[date.getDay()];
-  const year = date.getFullYear();
+  
+  // Parse date parts directly from the string to avoid timezone issues
+  // entry.date is expected in YYYY-MM-DD format
+  const dateParts = entry.date.split('-');
+  const year = parseInt(dateParts[0], 10);
+  const month = parseInt(dateParts[1], 10);
+  const day = parseInt(dateParts[2], 10);
+  
+  // Create date using UTC to avoid timezone shifting
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const dayName = dayNames[date.getUTCDay()];
+  
+  // Format date as MM/DD/YYYY to match existing sheet format
+  const formattedDate = `${month}/${day}/${year}`;
 
   // Return values in the exact order of your sheet columns (29 columns)
   // Columns: Year, Date, Day, Time Awake, Coffee, Breakfast, Time at Work, Time Left Work,
@@ -69,7 +80,7 @@ function formatRowForSheet(entry: DailyLogEntry): any[] {
   // Weight, Calories, Latest Hype?, Dream, Bed Time, Morning walk
   return [
     year,                                          // 1. Year
-    entry.date,                                    // 2. Date
+    formattedDate,                                 // 2. Date (MM/DD/YYYY)
     dayName,                                       // 3. Day
     entry.time_awake || '',                        // 4. Time Awake
     entry.coffee ? 'Yes' : 'No',                   // 5. Coffee
