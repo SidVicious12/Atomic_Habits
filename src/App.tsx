@@ -14,6 +14,7 @@ import DailyLogPage from './pages/DailyLogPage';
 import TodayPage from './pages/TodayPage';
 import LoginPage from './pages/login';
 import MobileHubPage from './pages/MobileHubPage';
+import HistoryPage from './pages/HistoryPage';
 
 // Protected route wrapper - redirects to login if not authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -118,6 +119,7 @@ function App() {
             <Route index element={<SmartHome />} />
             <Route path="category/:categoryName" element={<CategoryPage />} />
             <Route path="habit/:habitName" element={<HabitDetailPage />} />
+            <Route path="history" element={<HistoryPage />} />
           </Route>
 
           {/* Log page (protected) */}

@@ -28,7 +28,8 @@ import {
   FootprintsIcon,
   Candy,
   GlassWater,
-  Home
+  Home,
+  History
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -168,6 +169,17 @@ export default function Sidebar({ categories }: SidebarProps) {
           >
             <Home size={20} />
             {!isCollapsed && <span className="font-medium">Home</span>}
+          </Link>
+          <Link
+            to="/history"
+            className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+              location.pathname === '/history'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
+                : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+            }`}
+          >
+            <History size={20} />
+            {!isCollapsed && <span className="font-medium">History</span>}
           </Link>
         </div>
 
