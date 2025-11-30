@@ -17,6 +17,7 @@ import {
   ChevronDown, 
   Home, 
   Calendar,
+  History,
   Sun,
   Coffee,
   Utensils,
@@ -313,12 +314,16 @@ export default function TodayPage() {
         </button>
       </div>
 
-      {/* Bottom Navigation - Mobile only (Today + Home only) */}
+      {/* Bottom Navigation - Mobile only */}
       <nav className="fixed bottom-20 left-0 right-0 px-4 pb-4 md:hidden z-40">
-        <div className="bg-slate-900 rounded-2xl px-8 py-3 flex justify-around shadow-xl">
+        <div className="bg-slate-900 rounded-2xl px-6 py-3 flex justify-around shadow-xl">
           <Link to="/today" className="flex flex-col items-center text-blue-400">
             <Calendar size={24} />
             <span className="text-xs mt-1">Today</span>
+          </Link>
+          <Link to="/mobile" className="flex flex-col items-center text-slate-400 hover:text-white">
+            <History size={24} />
+            <span className="text-xs mt-1">Hub</span>
           </Link>
           <Link to="/" className="flex flex-col items-center text-slate-400 hover:text-white">
             <Home size={24} />
