@@ -257,3 +257,338 @@ export async function upsertDailyLogToSheet(entry: DailyLogEntry): Promise<{ suc
     };
   }
 }
+
+/**
+ * Date range result interface
+ */
+export interface DateRangeRow {
+  rowNumber: number;
+  date: string;
+  data: any[];
+}
+
+export interface DateRangeResult {
+  success: boolean;
+  rows: DateRangeRow[];
+  headers: string[];
+  count: number;
+  error?: string;
+}
+
+/**
+ * Fetch entries for a date range from Google Sheets
+ * Used for historical data viewing (last 7 days)
+ */
+export async function getDateRange(startDate: string, endDate: string): Promise<DateRangeResult> {
+  if (!isWriteConfigured()) {
+    return {
+      success: false,
+      rows: [],
+      headers: [],
+      count: 0,
+      error: 'Google Sheets webhook not configured',
+    };
+  }
+
+  try {
+    console.log('📥 Fetching date range:', { startDate, endDate });
+    
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: JSON.stringify({
+        action: 'getDateRange',
+        startDate,
+        endDate,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ HTTP error from webhook:', response.status, errorText);
+      return {
+        success: false,
+        rows: [],
+        headers: [],
+        count: 0,
+        error: `HTTP ${response.status}: ${errorText}`,
+      };
+    }
+
+    const result = await response.json();
+    
+    if (result.error) {
+      console.error('❌ Error from webhook:', result.error);
+      return {
+        success: false,
+        rows: [],
+        headers: [],
+        count: 0,
+        error: result.error,
+      };
+    }
+
+    console.log(`✅ Fetched ${result.count} rows from date range`);
+    return {
+      success: true,
+      rows: result.rows || [],
+      headers: result.headers || [],
+      count: result.count || 0,
+    };
+    
+  } catch (error) {
+    console.error('❌ Failed to fetch date range:', error);
+    return {
+      success: false,
+      rows: [],
+      headers: [],
+      count: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Fetch a specific row by date
+ */
+export interface RowByDateResult {
+  success: boolean;
+  exists: boolean;
+  rowNumber?: number;
+  headers?: string[];
+  data?: any[];
+  error?: string;
+}
+
+export async function getRowByDate(date: string): Promise<RowByDateResult> {
+  if (!isWriteConfigured()) {
+    return {
+      success: false,
+      exists: false,
+      error: 'Google Sheets webhook not configured',
+    };
+  }
+
+  try {
+    console.log('📥 Fetching row for date:', date);
+    
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: JSON.stringify({
+        action: 'getRowByDate',
+        date,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        exists: false,
+        error: `HTTP ${response.status}: ${errorText}`,
+      };
+    }
+
+    const result = await response.json();
+    
+    if (result.error) {
+      return {
+        success: false,
+        exists: false,
+        error: result.error,
+      };
+    }
+
+    console.log(`✅ Row fetch result:`, result);
+    return {
+      success: true,
+      exists: result.exists,
+      rowNumber: result.rowNumber,
+      headers: result.headers,
+      data: result.data,
+    };
+    
+  } catch (error) {
+    console.error('❌ Failed to fetch row:', error);
+    return {
+      success: false,
+      exists: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Update an existing row (for editing)
+ */
+export async function updateRowByDate(entry: DailyLogEntry): Promise<{ success: boolean; rowNumber?: number; error?: string }> {
+  if (!isWriteConfigured()) {
+    return {
+      success: false,
+      error: 'Google Sheets webhook not configured',
+    };
+  }
+
+  try {
+    const rowData = formatRowForSheet(entry);
+    
+    console.log('📤 Updating row for date:', entry.date);
+    
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: JSON.stringify({
+        action: 'updateRow',
+        data: rowData,
+        date: entry.date,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        error: `HTTP ${response.status}: ${errorText}`,
+      };
+    }
+
+    const result = await response.json();
+    
+    if (result.error) {
+      return {
+        success: false,
+        error: result.error,
+      };
+    }
+
+    console.log('✅ Successfully updated row:', result);
+    return {
+      success: true,
+      rowNumber: result.rowNumber,
+    };
+    
+  } catch (error) {
+    console.error('❌ Failed to update row:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Parse raw row data back to DailyLogEntry format
+ * Maps array indices to entry fields based on column order
+ */
+export function parseRowToEntry(data: any[], headers: string[]): Partial<DailyLogEntry> {
+  // Column mapping based on sheet structure
+  // [Year, Date, Day, Time Awake, Coffee, Breakfast, ...]
+  const entry: Partial<DailyLogEntry> = {};
+  
+  // Map by header names (normalized)
+  const headerMap: Record<string, number> = {};
+  headers.forEach((h, i) => {
+    headerMap[h.toLowerCase().trim().replace(/[^a-z0-9]/g, '_')] = i;
+  });
+  
+  // Helper to get value by header pattern
+  const getValue = (patterns: string[]): any => {
+    for (const p of patterns) {
+      for (const [key, idx] of Object.entries(headerMap)) {
+        if (key.includes(p)) {
+          return data[idx];
+        }
+      }
+    }
+    return undefined;
+  };
+  
+  // Parse date
+  const dateVal = data[1] || data[headerMap['date']];
+  if (dateVal) {
+    if (typeof dateVal === 'string') {
+      entry.date = dateVal;
+    } else if (dateVal instanceof Date) {
+      entry.date = dateVal.toISOString().split('T')[0];
+    }
+  }
+  
+  // Parse times
+  entry.time_awake = getValue(['time_awake', 'awake']) || undefined;
+  entry.time_at_work = getValue(['time_at_work', 'at_work']) || undefined;
+  entry.time_left_work = getValue(['time_left_work', 'left_work']) || undefined;
+  entry.bed_time = getValue(['bed_time', 'bedtime']) || undefined;
+  
+  // Parse booleans (Yes/No strings to boolean)
+  const parseBool = (val: any): boolean | undefined => {
+    if (val === undefined || val === null || val === '') return undefined;
+    if (typeof val === 'boolean') return val;
+    const str = String(val).toLowerCase().trim();
+    return str === 'yes' || str === 'true' || str === '1' || str === 'y';
+  };
+  
+  entry.coffee = parseBool(getValue(['coffee']));
+  entry.breakfast = parseBool(getValue(['breakfast']));
+  entry.netflix_in_bed = parseBool(getValue(['netflix']));
+  entry.phone_on_wake = parseBool(getValue(['phone', 'social_media']));
+  entry.brushed_teeth_night = parseBool(getValue(['brush', 'teeth']));
+  entry.washed_face_night = parseBool(getValue(['wash', 'face']));
+  entry.green_tea = parseBool(getValue(['green_tea']));
+  entry.alcohol = parseBool(getValue(['drink', 'alcohol']));
+  entry.smoke = parseBool(getValue(['smoke']));
+  entry.soda = parseBool(getValue(['soda']));
+  entry.chocolate = parseBool(getValue(['chocolate']));
+  entry.relaxed_today = parseBool(getValue(['relax']));
+  entry.morning_walk = parseBool(getValue(['morning_walk', 'walk']));
+  
+  // Parse numbers
+  const parseNum = (val: any): number | undefined => {
+    if (val === undefined || val === null || val === '') return undefined;
+    const num = parseFloat(val);
+    return isNaN(num) ? undefined : num;
+  };
+  
+  entry.dabs_count = parseNum(getValue(['dabs', '_of_dabs']));
+  entry.water_bottles_count = parseNum(getValue(['water', 'bottles']));
+  entry.pages_read_count = parseNum(getValue(['pages', 'read']));
+  entry.weight_lbs = parseNum(getValue(['weight']));
+  entry.calories = parseNum(getValue(['calories']));
+  
+  // Parse text fields
+  entry.workout = getValue(['workout']) || undefined;
+  entry.day_rating = getValue(['day', 'how_was']) || undefined;
+  entry.dream = getValue(['dream']) || undefined;
+  entry.latest_hype = getValue(['hype', 'latest_hype']) || undefined;
+  
+  return entry;
+}
+
+/**
+ * Validate date for forward entry
+ * Returns true if date is valid (not more than 7 days in future)
+ */
+export function isValidForwardDate(dateStr: string, maxDaysAhead: number = 7): { valid: boolean; error?: string } {
+  const date = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + maxDaysAhead);
+  
+  if (isNaN(date.getTime())) {
+    return { valid: false, error: 'Invalid date format' };
+  }
+  
+  if (date > maxDate) {
+    return { valid: false, error: `Cannot enter data more than ${maxDaysAhead} days ahead` };
+  }
+  
+  return { valid: true };
+}

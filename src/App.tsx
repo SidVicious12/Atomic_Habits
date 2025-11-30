@@ -13,6 +13,7 @@ import HabitDetailPage from './pages/HabitDetailPage';
 import DailyLogPage from './pages/DailyLogPage';
 import TodayPage from './pages/TodayPage';
 import LoginPage from './pages/login';
+import MobileHubPage from './pages/MobileHubPage';
 
 // Protected route wrapper - redirects to login if not authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -106,9 +107,10 @@ function App() {
           {/* Login page - public */}
           <Route path="/login" element={<LoginPage />} />
           
-          {/* Today page - mobile-first, minimal chrome (protected) */}
+          {/* Mobile-first pages - minimal chrome (protected) */}
           <Route element={<MinimalLayout />}>
             <Route path="/today" element={<TodayPage />} />
+            <Route path="/mobile" element={<MobileHubPage />} />
           </Route>
           
           {/* Main application routes - protected */}

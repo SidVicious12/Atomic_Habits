@@ -1,6 +1,16 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAllDailyLogsFromSheets, getLatestDailyLogFromSheets, type DailyLog } from '../lib/google-sheets';
-import { appendDailyLogToSheet, upsertDailyLogToSheet, isWriteConfigured, type DailyLogEntry } from '../lib/google-sheets-write';
+import { 
+  appendDailyLogToSheet, 
+  upsertDailyLogToSheet, 
+  isWriteConfigured, 
+  getDateRange,
+  getRowByDate,
+  updateRowByDate,
+  type DailyLogEntry,
+  type DateRangeResult,
+  type RowByDateResult 
+} from '../lib/google-sheets-write';
 import { queryKeys } from '@/lib/react-query';
 
 // Hook for getting all daily logs with caching - FROM GOOGLE SHEETS
@@ -78,4 +88,56 @@ export function useDailyLogsCache() {
     invalidateAll,
     getCachedLatest,
   };
+}
+
+// Hook for fetching entries in a date range (historical viewing)
+export function useDateRange(startDate: string, endDate: string) {
+  return useQuery<DateRangeResult, Error>({
+    queryKey: ['dateRange', startDate, endDate],
+    queryFn: () => getDateRange(startDate, endDate),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    enabled: !!startDate && !!endDate,
+  });
+}
+
+// Hook for fetching a specific row by date
+export function useRowByDate(date: string) {
+  return useQuery<RowByDateResult, Error>({
+    queryKey: ['rowByDate', date],
+    queryFn: () => getRowByDate(date),
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    enabled: !!date,
+  });
+}
+
+// Hook for updating an existing row
+export function useUpdateRow() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (entry: DailyLogEntry) => updateRowByDate(entry),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dailyLogs });
+      queryClient.invalidateQueries({ queryKey: ['latestDailyLog'] });
+      queryClient.invalidateQueries({ queryKey: ['dateRange'] });
+      queryClient.invalidateQueries({ queryKey: ['rowByDate', variables.date] });
+    },
+    onError: (error) => {
+      console.error('Failed to update row:', error);
+    },
+  });
+}
+
+// Helper hook to get last 7 days date range
+export function useLast7Days() {
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  
+  const endDate = today.toISOString().split('T')[0];
+  const startDate = weekAgo.toISOString().split('T')[0];
+  
+  return useDateRange(startDate, endDate);
 }
