@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAllDailyLogsFromSheets, getLatestDailyLogFromSheets, type DailyLog } from '../lib/google-sheets';
 import { 
@@ -138,7 +139,28 @@ function getLocalDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-// Helper hook to get last 7 days date range
+// Normalize any date string to YYYY-MM-DD format
+function normalizeDateToYYYYMMDD(dateStr: string): string {
+  if (!dateStr) return '';
+  
+  // Already in YYYY-MM-DD format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  // Handle MM/DD/YYYY format
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+    const parts = dateStr.split('/');
+    const month = parts[0].padStart(2, '0');
+    const day = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  
+  return dateStr;
+}
+
+// Helper hook to get last 7 days date range (uses webhook)
 export function useLast7Days() {
   const today = new Date();
   const weekAgo = new Date(today);
@@ -148,4 +170,51 @@ export function useLast7Days() {
   const startDate = getLocalDateString(weekAgo);
   
   return useDateRange(startDate, endDate);
+}
+
+// NEW: Hook that uses the working public API and filters client-side
+export function useHistoryData(daysBack: number = 14) {
+  const { data: allLogs, isLoading, error, refetch } = useDailyLogs();
+  
+  // Generate date range
+  const dateRange = useMemo(() => {
+    const dates: string[] = [];
+    const today = new Date();
+    for (let i = 0; i < daysBack; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      dates.push(getLocalDateString(date));
+    }
+    return dates;
+  }, [daysBack]);
+  
+  // Build entries map from all logs
+  const entriesByDate = useMemo(() => {
+    const map: Record<string, DailyLog> = {};
+    if (allLogs) {
+      allLogs.forEach(log => {
+        const dateStr = log.log_date || log.date;
+        if (dateStr) {
+          const normalized = normalizeDateToYYYYMMDD(String(dateStr));
+          map[normalized] = log;
+        }
+      });
+    }
+    return map;
+  }, [allLogs]);
+  
+  // Count entries in date range
+  const entriesInRange = useMemo(() => {
+    return dateRange.filter(d => entriesByDate[d]).length;
+  }, [dateRange, entriesByDate]);
+  
+  return {
+    dateRange,
+    entriesByDate,
+    entriesInRange,
+    totalEntries: allLogs?.length || 0,
+    isLoading,
+    error,
+    refetch,
+  };
 }
