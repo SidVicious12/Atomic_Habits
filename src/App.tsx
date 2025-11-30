@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { ToastProvider } from './components/ui/toast';
 import { ErrorBoundary } from './lib/error-boundary';
 import { useAuth } from './hooks/useAuth';
@@ -11,6 +11,7 @@ import Homepage from './pages/Homepage';
 import CategoryPage from './pages/CategoryPage';
 import HabitDetailPage from './pages/HabitDetailPage';
 import DailyLogPage from './pages/DailyLogPage';
+import TodayPage from './pages/TodayPage';
 import LoginPage from './pages/login';
 
 // Protected route wrapper - redirects to login if not authenticated
@@ -75,6 +76,28 @@ const LogLayout = () => {
   );
 };
 
+// Minimal layout for mobile-first pages (no sidebar/topbar)
+const MinimalLayout = () => {
+  return (
+    <ProtectedRoute>
+      <Outlet />
+    </ProtectedRoute>
+  );
+};
+
+// Smart redirect: sends mobile users to /today, desktop to /
+const SmartHome = () => {
+  const isMobile = window.innerWidth < 768;
+  
+  // On first visit from mobile, redirect to /today
+  if (isMobile && !sessionStorage.getItem('visited')) {
+    sessionStorage.setItem('visited', 'true');
+    return <Navigate to="/today" replace />;
+  }
+  
+  return <Homepage />;
+};
+
 function App() {
   return (
     <ErrorBoundary>
@@ -83,9 +106,14 @@ function App() {
           {/* Login page - public */}
           <Route path="/login" element={<LoginPage />} />
           
+          {/* Today page - mobile-first, minimal chrome (protected) */}
+          <Route element={<MinimalLayout />}>
+            <Route path="/today" element={<TodayPage />} />
+          </Route>
+          
           {/* Main application routes - protected */}
           <Route path="/" element={<AppLayout />}>
-            <Route index element={<Homepage />} />
+            <Route index element={<SmartHome />} />
             <Route path="category/:categoryName" element={<CategoryPage />} />
             <Route path="habit/:habitName" element={<HabitDetailPage />} />
           </Route>

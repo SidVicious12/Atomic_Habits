@@ -23,17 +23,25 @@ export const useAuth = () => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle() // Use maybeSingle to handle 0 or 1 rows gracefully
       
+      // PGRST116 = no rows found, 406 = table may not exist or RLS issue
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error)
+        // Only log if it's not a common expected error
+        if (error.message?.includes('406') || error.code === '406') {
+          console.warn('Profile table may not exist or has RLS restrictions')
+        } else {
+          console.error('Error fetching profile:', error)
+        }
+        return // Don't throw, just skip profile
       }
       
       if (data) {
         setProfile(data)
       }
     } catch (err) {
-      console.error('Error in fetchProfile:', err)
+      // Silently handle profile fetch errors - profile is optional
+      console.warn('Profile fetch skipped:', err instanceof Error ? err.message : 'Unknown error')
     }
   }
 

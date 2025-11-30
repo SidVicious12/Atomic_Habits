@@ -60,38 +60,43 @@ function formatRowForSheet(entry: DailyLogEntry): any[] {
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const date = new Date(entry.date);
   const dayName = dayNames[date.getDay()];
+  const year = date.getFullYear();
 
-  // Return values in the exact order of your sheet columns
-  // Adjust this array to match your Google Sheet column order
+  // Return values in the exact order of your sheet columns (29 columns)
+  // Columns: Year, Date, Day, Time Awake, Coffee, Breakfast, Time at Work, Time Left Work,
+  // Netflix in Bed?, Phone 30min?, # Dabs, # Water Bottles, # Pages Read, Brush Teeth,
+  // Wash Face, Green Tea, Drink, Smoke, Soda, Chocolate, Workout, Relax?, How was my Day?,
+  // Weight, Calories, Latest Hype?, Dream, Bed Time, Morning walk
   return [
-    entry.date,                                    // Date
-    dayName,                                       // Day
-    entry.time_awake || '',                        // Time Awake
-    entry.coffee ? 'Yes' : 'No',                   // Coffee
-    entry.breakfast ? 'Yes' : 'No',                // Breakfast
-    entry.time_at_work || '',                      // Time at Work
-    entry.time_left_work || '',                    // Time Left Work
-    entry.netflix_in_bed ? 'Yes' : 'No',           // Netflix in Bed?
-    entry.phone_on_wake ? 'Yes' : 'No',            // Phone 30min after wake?
-    entry.dabs_count ?? 0,                         // # of Dabs
-    entry.water_bottles_count ?? 0,                // # of Water Bottles
-    entry.pages_read_count ?? 0,                   // # of Pages Read
-    entry.brushed_teeth_night ? 'Yes' : 'No',      // Brush Teeth at Night
-    entry.washed_face_night ? 'Yes' : 'No',        // Wash Face at Night
-    entry.green_tea ? 'Yes' : 'No',                // Green Tea
-    entry.alcohol ? 'Yes' : 'No',                  // Drink (alcohol)
-    entry.smoke ? 'Yes' : 'No',                    // Smoke
-    entry.soda ? 'Yes' : 'No',                     // Soda
-    entry.chocolate ? 'Yes' : 'No',                // Chocolate
-    Array.isArray(entry.workout) ? entry.workout.join(', ') : (entry.workout || 'No'), // Workout
-    entry.relaxed_today ? 'Yes' : 'No',            // Relax?
-    entry.day_rating || '',                        // How was my day?
-    entry.weight_lbs ?? '',                        // Weight in lbs
-    entry.calories ?? '',                          // Calories
-    entry.latest_hype || '',                       // Latest hype?
-    entry.dream || '',                             // Dream I had
-    entry.bed_time || '',                          // Bed time
-    entry.morning_walk ? 'Yes' : 'No',             // Morning walk
+    year,                                          // 1. Year
+    entry.date,                                    // 2. Date
+    dayName,                                       // 3. Day
+    entry.time_awake || '',                        // 4. Time Awake
+    entry.coffee ? 'Yes' : 'No',                   // 5. Coffee
+    entry.breakfast ? 'Yes' : 'No',                // 6. Breakfast
+    entry.time_at_work || '',                      // 7. Time at Work
+    entry.time_left_work || '',                    // 8. Time Left Work
+    entry.netflix_in_bed ? 'Yes' : 'No',           // 9. Did I watch Netflix in Bed last Night?
+    entry.phone_on_wake ? 'Yes' : 'No',            // 10. Did I use my phone for Social Media 30 mins after waking up?
+    entry.dabs_count ?? 0,                         // 11. # of Dabs
+    entry.water_bottles_count ?? 0,                // 12. # of Bottles of Water Drank?
+    entry.pages_read_count ?? 0,                   // 13. Number of Pages Read
+    entry.brushed_teeth_night ? 'Yes' : 'No',      // 14. Brush Teeth at Night
+    entry.washed_face_night ? 'Yes' : 'No',        // 15. Wash Face at Night
+    entry.green_tea ? 'Yes' : 'No',                // 16. Green Tea
+    entry.alcohol ? 'Yes' : 'No',                  // 17. Drink
+    entry.smoke ? 'Yes' : 'No',                    // 18. Smoke
+    entry.soda ? 'Yes' : 'No',                     // 19. Soda
+    entry.chocolate ? 'Yes' : 'No',                // 20. Chocolate
+    Array.isArray(entry.workout) ? entry.workout.join(', ') : (entry.workout || 'No'), // 21. Workout
+    entry.relaxed_today ? 'Yes' : 'No',            // 22. Relax?
+    entry.day_rating || '',                        // 23. How was my Day?
+    entry.weight_lbs ?? '',                        // 24. Weight in lbs
+    entry.calories ?? '',                          // 25. # of Calories
+    entry.latest_hype || '',                       // 26. Latest Hype?
+    entry.dream || '',                             // 27. Dream I Had last night
+    entry.bed_time || '',                          // 28. Bed Time
+    entry.morning_walk ? 'Yes' : 'No',             // 29. Morning walk
   ];
 }
 
@@ -113,10 +118,11 @@ export async function appendDailyLogToSheet(entry: DailyLogEntry): Promise<{ suc
     
     console.log('📤 Appending to Google Sheets webhook:', { date: entry.date });
     
+    // Use text/plain to avoid CORS preflight - Google Apps Script handles this better
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify({
         action: 'append',
@@ -163,10 +169,11 @@ export async function checkDateExists(date: string): Promise<{ exists: boolean; 
   }
 
   try {
+    // Use text/plain to avoid CORS preflight
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify({
         action: 'checkDate',
@@ -200,10 +207,11 @@ export async function upsertDailyLogToSheet(entry: DailyLogEntry): Promise<{ suc
     
     console.log('📤 Sending to Google Sheets webhook:', { date: entry.date, rowData });
     
+    // Use text/plain to avoid CORS preflight - Google Apps Script handles this better
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify({
         action: 'upsert',

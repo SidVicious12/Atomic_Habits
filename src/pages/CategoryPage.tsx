@@ -324,32 +324,34 @@ const CategoryPage = () => {
 
   return (
     <>
-      <div className="flex justify-between items-start mb-6">
+      {/* Responsive header - stacks on mobile */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
-            {CategoryIcon && <CategoryIcon className="h-8 w-8" />}
+          <h2 className="text-xl lg:text-2xl font-bold mb-2 flex items-center gap-3">
+            {CategoryIcon && <CategoryIcon className="h-6 w-6 lg:h-8 lg:w-8" />}
             {categoryName}
           </h2>
           <p className="text-sm text-muted-foreground">
             Displaying historical data for the {categoryName} category.
           </p>
-          <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+          <div className="flex flex-wrap items-center gap-2 lg:gap-4 text-xs text-gray-500 mt-1">
             <span className="flex items-center gap-1">
-              📊 Showing {logs.length} of {allLogs.length} total entries
+              📊 {logs.length} of {allLogs.length} entries
             </span>
             {logs.length !== allLogs.length && (
               <span className="flex items-center gap-1 text-blue-600">
-                🔍 (filtered by date range)
+                🔍 filtered
               </span>
             )}
             {logs.length === 0 && allLogs.length > 0 && (
               <span className="flex items-center gap-1 text-amber-600">
-                ⚠️ No data in current range
+                ⚠️ No data in range
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        {/* Controls - full width on mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-4 w-full lg:w-auto">
           <SimpleDateRangePicker
             value={dateRange}
             onChange={handleDateRangeChange}
@@ -360,11 +362,11 @@ const CategoryPage = () => {
               fetchLogs();
             }}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
             title="Refresh data from database"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <span className="sm:inline">Refresh</span>
           </button>
         </div>
       </div>

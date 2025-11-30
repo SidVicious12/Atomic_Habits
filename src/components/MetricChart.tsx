@@ -201,18 +201,19 @@ export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title
     : {};
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
-        {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+    <div className="p-3 sm:p-4 bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="mb-3 sm:mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-700">{title}</h3>
+        {description && <p className="text-xs sm:text-sm text-gray-500 mt-1">{description}</p>}
       </div>
-      <ResponsiveContainer width="100%" height={300}>
+      {/* Responsive height: shorter on mobile to prevent excessive scrolling */}
+      <ResponsiveContainer width="100%" height={250} className="sm:!h-[300px]">
         <BarChart
           data={chartData}
           margin={{
             top: 5,
-            right: 30,
-            left: 20,
+            right: 10,
+            left: 0,
             bottom: 5,
           }}
         >
@@ -221,21 +222,22 @@ export const MetricChart: React.FC<MetricChartProps> = ({ data, metricKey, title
             dataKey="log_date" 
             tickFormatter={formatXAxis} 
             stroke="#666"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
             angle={-45}
             textAnchor="end"
-            height={60}
+            height={50}
+            interval="preserveStartEnd"
           />
-          <YAxis stroke="#666" tick={{ fontSize: 12 }} {...yAxisProps} />
+          <YAxis stroke="#666" tick={{ fontSize: 10 }} width={40} {...yAxisProps} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: '12px' }} />
           <Bar 
             dataKey={metricKey} 
             name={title}
             fill={lineColor}
             radius={[2, 2, 0, 0]}
             minPointSize={2}
-            maxBarSize={60}
+            maxBarSize={50}
           />
         </BarChart>
       </ResponsiveContainer>

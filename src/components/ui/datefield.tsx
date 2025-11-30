@@ -87,9 +87,10 @@ function JollyDateField<T extends AriaDateValue>({
       className={composeRenderProps(className, (className) =>
         cn("group flex flex-col gap-2", className)
       )}
+      aria-label={!label ? "Date field" : undefined}
       {...props}
     >
-      <Label>{label}</Label>
+      {label && <Label>{label}</Label>}
       <DateInput />
       {description && (
         <Text className="text-sm text-muted-foreground" slot="description">
@@ -120,9 +121,10 @@ function JollyTimeField<T extends AriaTimeValue>({
       className={composeRenderProps(className, (className) =>
         cn("group flex flex-col gap-2", className)
       )}
+      aria-label={!label ? "Time field" : undefined}
       {...props}
     >
-      <Label>{label}</Label>
+      {label && <Label>{label}</Label>}
       <DateInput />
       {description && <Text slot="description">{description}</Text>}
       <FieldError>{errorMessage}</FieldError>

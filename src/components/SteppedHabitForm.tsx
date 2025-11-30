@@ -263,9 +263,19 @@ function AfternoonSection({ formData, updateField }: SectionProps) {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Afternoon Habits</h2>
-      <p className="text-gray-500 mb-6">Track your intake and substances.</p>
+      <p className="text-gray-500 mb-6">Track your work schedule, intake and substances.</p>
 
       <div className="space-y-3">
+        <TimeInput
+          label="Time at Work"
+          value={formData.time_at_work || ''}
+          onChange={(v) => updateField('time_at_work', v)}
+        />
+        <TimeInput
+          label="Time Left Work"
+          value={formData.time_left_work || ''}
+          onChange={(v) => updateField('time_left_work', v)}
+        />
         <NumberInput
           label="Water Bottles"
           value={formData.water_bottles_count ?? 0}
@@ -480,6 +490,7 @@ function TimeInput({ label, value, onChange }: {
         value={timeValue} 
         onChange={handleChange}
         hourCycle={12}
+        aria-label={label}
       >
         <DateInput className="w-32" />
       </TimeField>

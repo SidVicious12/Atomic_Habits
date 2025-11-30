@@ -145,8 +145,19 @@ export default function Sidebar({ categories }: SidebarProps) {
           </button>
         </div>
 
-        {/* Home Link */}
-        <div className="p-3">
+        {/* Quick Nav Links */}
+        <div className="p-3 space-y-1">
+          <Link
+            to="/today"
+            className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+              location.pathname === '/today'
+                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg'
+                : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+            }`}
+          >
+            <Calendar size={20} />
+            {!isCollapsed && <span className="font-medium">Today</span>}
+          </Link>
           <Link
             to="/"
             className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${

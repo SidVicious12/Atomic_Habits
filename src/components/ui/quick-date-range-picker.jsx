@@ -157,6 +157,7 @@ const QuickDateRangePicker = ({ value, onChange, className, dataSpan = "Jan 2024
                 value={value}
                 onChange={onChange}
                 className="w-full"
+                aria-label="Select date range"
               />
             </div>
           </div>

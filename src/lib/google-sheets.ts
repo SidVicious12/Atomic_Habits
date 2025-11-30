@@ -5,7 +5,7 @@
 
 const GOOGLE_SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID || '1Nlpar2t_3leYPqDsFz4IordiFE4-RBVUHHLT8ySJ3Y0';
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-const GOOGLE_SHEET_NAME = import.meta.env.VITE_GOOGLE_SHEET_NAME || 'Sheet1';
+const GOOGLE_SHEET_NAME = import.meta.env.VITE_GOOGLE_SHEET_NAME || 'HABIT dashboard';
 
 // Log configuration on load
 console.log('🔧 Google Sheets Config:', {

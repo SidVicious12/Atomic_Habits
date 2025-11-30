@@ -19,6 +19,12 @@ export const supabase = createClient(supabaseUrl || '', supabaseKey || '', {
     persistSession: true,
     detectSessionInUrl: true,
   },
+  global: {
+    headers: {
+      'Accept': 'application/json',
+      'Prefer': 'return=representation',
+    },
+  },
 })
 
 // Helper to check if Supabase is properly configured

@@ -268,6 +268,7 @@ function JollyDateRangePicker({
                 <DateRangePicker
                   value={value}
                   onChange={onChange}
+                  aria-label="Select custom date range"
                   {...props}
                 >
                   <FieldGroup className="mb-3">
