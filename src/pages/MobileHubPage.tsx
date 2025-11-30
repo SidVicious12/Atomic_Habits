@@ -31,9 +31,49 @@ import { useLast7Days, useUpsertDailyLog, useCanWrite, useDailyLogsCache } from 
 import { isValidForwardDate, parseRowToEntry, type DailyLogEntry } from '@/lib/google-sheets-write';
 import EditEntryModal from '@/components/EditEntryModal';
 
+// Helper to get local date string in YYYY-MM-DD format
+function getLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Normalize any date string to YYYY-MM-DD format for consistent lookups
+function normalizeDateToYYYYMMDD(dateStr: string): string {
+  if (!dateStr) return '';
+  
+  // Already in YYYY-MM-DD format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  // Handle MM/DD/YYYY format
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+    const parts = dateStr.split('/');
+    const month = parts[0].padStart(2, '0');
+    const day = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  
+  // Fallback: try to parse and convert
+  try {
+    const date = new Date(dateStr + 'T12:00:00');
+    if (!isNaN(date.getTime())) {
+      return getLocalDateString(date);
+    }
+  } catch {
+    // ignore
+  }
+  
+  return dateStr;
+}
+
 // Date helper functions
 function formatDateDisplay(dateStr: string): string {
-  const date = new Date(dateStr + 'T12:00:00');
+  const normalized = normalizeDateToYYYYMMDD(dateStr);
+  const date = new Date(normalized + 'T12:00:00');
   return date.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
@@ -64,8 +104,8 @@ function getDateRange(daysBack: number, daysForward: number): { start: string; e
   end.setDate(end.getDate() + daysForward);
   
   return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
+    start: getLocalDateString(start),
+    end: getLocalDateString(end),
   };
 }
 
@@ -81,12 +121,14 @@ export default function MobileHubPage() {
   const { invalidateAll } = useDailyLogsCache();
   const { data: historyData, isLoading, error, refetch } = useLast7Days();
   
-  // Get existing entries mapped by date
+  // Get existing entries mapped by date (normalized to YYYY-MM-DD)
   const entriesByDate = useMemo(() => {
     const map: Record<string, { rowNumber: number; data: any[] }> = {};
     if (historyData?.rows) {
       historyData.rows.forEach(row => {
-        map[row.date] = { rowNumber: row.rowNumber, data: row.data };
+        // Normalize the date from the API to YYYY-MM-DD for consistent lookups
+        const normalizedDate = normalizeDateToYYYYMMDD(row.date);
+        map[normalizedDate] = { rowNumber: row.rowNumber, data: row.data };
       });
     }
     return map;
@@ -234,14 +276,14 @@ interface HistoryViewProps {
 }
 
 function HistoryView({ historyData, isLoading, error, entriesByDate, onEditClick, onRefresh }: HistoryViewProps) {
-  // Generate last 7 days
+  // Generate last 7 days using local date strings
   const last7Days = useMemo(() => {
     const days: string[] = [];
     const today = new Date();
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      days.push(date.toISOString().split('T')[0]);
+      days.push(getLocalDateString(date));
     }
     return days;
   }, []);
@@ -394,7 +436,7 @@ interface ForwardEntryViewProps {
 
 function ForwardEntryView({ canWrite, entriesByDate, headers, onEditClick }: ForwardEntryViewProps) {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    getLocalDateString()
   );
   
   const upsertMutation = useUpsertDailyLog();
@@ -407,7 +449,7 @@ function ForwardEntryView({ canWrite, entriesByDate, headers, onEditClick }: For
     for (let i = 0; i <= 7; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
+      dates.push(getLocalDateString(date));
     }
     return dates;
   }, []);
@@ -441,7 +483,7 @@ function ForwardEntryView({ canWrite, entriesByDate, headers, onEditClick }: For
           {dateOptions.map((date) => {
             const isSelected = date === selectedDate;
             const hasEntry = !!entriesByDate[date];
-            const isToday = date === new Date().toISOString().split('T')[0];
+            const isToday = date === getLocalDateString();
             
             return (
               <button
