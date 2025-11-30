@@ -118,7 +118,7 @@ export default function TopBar({ onSearch }: TopBarProps) {
         {/* Right side - Log Habits + User Menu */}
         <div className="flex items-center gap-4 flex-shrink-0">
           {/* Log Habits Button */}
-          <AnimatedBorderButton onClick={() => navigate('/log')}>
+          <AnimatedBorderButton onClick={() => navigate('/today')}>
             <ClipboardList size={18} />
             Log Habits
           </AnimatedBorderButton>

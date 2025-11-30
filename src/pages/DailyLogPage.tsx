@@ -1,8 +1,8 @@
-import React from 'react';
-import SteppedHabitForm from '@/components/SteppedHabitForm';
+import { Navigate } from 'react-router-dom';
 
+// Redirect /log to /today - unified habit entry experience
 const DailyLogPage: React.FC = () => {
-  return <SteppedHabitForm />;
+  return <Navigate to="/today" replace />;
 };
 
 export default DailyLogPage;
