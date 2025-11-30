@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   Check, 
   ChevronDown, 
@@ -94,14 +94,26 @@ const HABITS = [
 
 type HabitKey = typeof HABITS[number]['key'];
 
+// Helper to get local date string in YYYY-MM-DD format without timezone issues
+function getLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function TodayPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const canWrite = useCanWrite();
   const upsertMutation = useUpsertDailyLog();
   const { data: lastLog, isLoading: loadingLast } = useLatestDailyLog();
   
+  // Get initial date from URL param or use today
+  const initialDate = searchParams.get('date') || getLocalDateString();
+  
   const [formData, setFormData] = useState<Partial<DailyLogEntry>>({
-    date: new Date().toISOString().split('T')[0],
+    date: initialDate,
     water_bottles_count: 0,
     pages_read_count: 0,
     dabs_count: 0,
@@ -166,8 +178,15 @@ export default function TodayPage() {
     return acc;
   }, {} as Record<string, typeof HABITS[number][]>);
 
-  // Date navigation
-  const selectedDate = new Date(formData.date || new Date().toISOString().split('T')[0]);
+  // Date navigation - parse date parts to avoid timezone issues
+  const currentDateStr = formData.date || getLocalDateString();
+  const dateParts = currentDateStr.split('-');
+  const selectedDate = new Date(
+    parseInt(dateParts[0]),
+    parseInt(dateParts[1]) - 1,
+    parseInt(dateParts[2]),
+    12, 0, 0 // noon to avoid any edge cases
+  );
   const dateDisplay = selectedDate.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
@@ -177,10 +196,10 @@ export default function TodayPage() {
   const changeDate = (days: number) => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + days);
-    updateField('date', newDate.toISOString().split('T')[0]);
+    updateField('date', getLocalDateString(newDate));
   };
 
-  const isToday = formData.date === new Date().toISOString().split('T')[0];
+  const isToday = formData.date === getLocalDateString();
 
   return (
     <div className="min-h-screen bg-gray-50 pb-48">
@@ -206,7 +225,7 @@ export default function TodayPage() {
             <ChevronLeft size={24} />
           </button>
           <button 
-            onClick={() => updateField('date', new Date().toISOString().split('T')[0])}
+            onClick={() => updateField('date', getLocalDateString())}
             className="flex-1 text-center py-1"
           >
             <p className="text-white font-medium">{dateDisplay}</p>
