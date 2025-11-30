@@ -48,8 +48,8 @@ const AppLayout = () => {
       <div className="min-h-screen bg-gray-50 font-sans text-foreground">
         <Sidebar />
         <TopBar />
-        {/* Main content area - offset for fixed sidebar and top bar */}
-        <div className="lg:ml-72 transition-all duration-300 pt-16">
+        {/* Main content area - offset for fixed sidebar and top bar + safe area */}
+        <div className="lg:ml-72 transition-all duration-300 pt-16" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}>
           <main className="min-h-screen p-6 overflow-y-auto">
             <Outlet />
           </main>
@@ -66,7 +66,7 @@ const LogLayout = () => {
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-foreground">
         <Sidebar />
         <TopBar />
-        <div className="lg:ml-72 transition-all duration-300 pt-16">
+        <div className="lg:ml-72 transition-all duration-300 pt-16" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}>
           <main className="flex-1 overflow-y-auto">
             <Outlet />
           </main>

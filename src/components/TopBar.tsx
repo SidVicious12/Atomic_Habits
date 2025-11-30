@@ -96,7 +96,7 @@ export default function TopBar({ onSearch }: TopBarProps) {
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 bg-gray-50/80 backdrop-blur-sm border-b border-gray-200">
+    <div className="fixed top-0 left-0 right-0 z-30 bg-gray-50/80 backdrop-blur-sm border-b border-gray-200" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="flex items-center justify-between px-6 py-3 lg:pl-80">
         {/* Spacer for left side */}
         <div className="w-32 hidden lg:block" />
