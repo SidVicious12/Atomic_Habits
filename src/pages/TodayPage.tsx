@@ -48,7 +48,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUpsertDailyLog, useLatestDailyLog, useCanWrite } from '@/hooks/useDailyLogs';
+import { useUpsertDailyLog, useLatestDailyLog, useCanWrite, useEntryForDate } from '@/hooks/useDailyLogs';
 import type { DailyLogEntry } from '@/lib/google-sheets-write';
 
 // Habit definitions with icons and types
@@ -102,6 +102,20 @@ function getLocalDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+// Helper to find a value in log by searching for keys containing patterns
+function findValue(log: any, patterns: string[]): any {
+  if (!log) return undefined;
+  for (const key of Object.keys(log)) {
+    const lowerKey = key.toLowerCase();
+    for (const pattern of patterns) {
+      if (lowerKey.includes(pattern.toLowerCase())) {
+        return log[key];
+      }
+    }
+  }
+  return undefined;
+}
+
 export default function TodayPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -111,6 +125,9 @@ export default function TodayPage() {
   
   // Get initial date from URL param or use today
   const initialDate = searchParams.get('date') || getLocalDateString();
+  
+  // Fetch existing entry for this date (for editing)
+  const { entry: existingEntry, isLoading: loadingEntry } = useEntryForDate(initialDate);
   
   const [formData, setFormData] = useState<Partial<DailyLogEntry>>({
     date: initialDate,
@@ -122,13 +139,50 @@ export default function TodayPage() {
   
   const [showSuccess, setShowSuccess] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [hasLoadedExisting, setHasLoadedExisting] = useState(false);
 
-  // Pre-fill weight from last log
+  // Pre-fill form with existing entry data when editing
   useEffect(() => {
-    if (lastLog?.weight_lbs) {
+    if (existingEntry && !hasLoadedExisting) {
+      setFormData({
+        date: initialDate,
+        time_awake: findValue(existingEntry, ['time_awake', 'awake']) || '',
+        time_at_work: findValue(existingEntry, ['time_at_work', 'at_work']) || '',
+        time_left_work: findValue(existingEntry, ['time_left_work', 'left_work']) || '',
+        bed_time: findValue(existingEntry, ['bed_time', 'bedtime']) || '',
+        coffee: findValue(existingEntry, ['coffee']) || false,
+        breakfast: findValue(existingEntry, ['breakfast']) || false,
+        phone_on_wake: findValue(existingEntry, ['phone', 'social_media']) || false,
+        netflix_in_bed: findValue(existingEntry, ['netflix']) || false,
+        brushed_teeth_night: findValue(existingEntry, ['brush', 'teeth']) || false,
+        washed_face_night: findValue(existingEntry, ['wash', 'face']) || false,
+        green_tea: findValue(existingEntry, ['green_tea']) || false,
+        alcohol: findValue(existingEntry, ['drink', 'alcohol']) || false,
+        smoke: findValue(existingEntry, ['smoke']) || false,
+        soda: findValue(existingEntry, ['soda']) || false,
+        chocolate: findValue(existingEntry, ['chocolate']) || false,
+        relaxed_today: findValue(existingEntry, ['relax']) || false,
+        morning_walk: findValue(existingEntry, ['morning_walk', 'walk']) || false,
+        dabs_count: findValue(existingEntry, ['dabs', '#_of_dabs']) || 0,
+        water_bottles_count: findValue(existingEntry, ['water', 'bottles']) || 0,
+        pages_read_count: findValue(existingEntry, ['pages', 'read']) || 0,
+        weight_lbs: findValue(existingEntry, ['weight']) || lastLog?.weight_lbs || undefined,
+        calories: findValue(existingEntry, ['calories']) || 0,
+        workout: findValue(existingEntry, ['workout']) || '',
+        day_rating: findValue(existingEntry, ['how_was', 'day']) || '',
+        dream: findValue(existingEntry, ['dream']) || '',
+        latest_hype: findValue(existingEntry, ['hype', 'latest_hype']) || '',
+      });
+      setHasLoadedExisting(true);
+    }
+  }, [existingEntry, hasLoadedExisting, initialDate, lastLog?.weight_lbs]);
+
+  // Pre-fill weight from last log (only if no existing entry)
+  useEffect(() => {
+    if (!existingEntry && lastLog?.weight_lbs && !hasLoadedExisting) {
       setFormData(prev => ({ ...prev, weight_lbs: lastLog.weight_lbs }));
     }
-  }, [lastLog]);
+  }, [lastLog, existingEntry, hasLoadedExisting]);
 
   const updateField = useCallback((key: string, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -206,7 +260,10 @@ export default function TodayPage() {
       {/* Sticky Header with Date Picker - includes safe area for notch */}
       <header className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 to-slate-800 text-white px-4 py-3 shadow-lg" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl font-bold">{isToday ? "Today's Habits" : 'Log Habits'}</h1>
+          <div>
+            <h1 className="text-xl font-bold">{isToday ? "Today's Habits" : existingEntry ? 'Edit Entry' : 'Log Habits'}</h1>
+            {loadingEntry && <p className="text-xs text-slate-400">Loading existing data...</p>}
+          </div>
           <Link 
             to="/" 
             className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors"

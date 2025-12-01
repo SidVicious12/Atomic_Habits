@@ -218,3 +218,32 @@ export function useHistoryData(daysBack: number = 14) {
     refetch,
   };
 }
+
+// Hook to get a single entry for a specific date
+export function useEntryForDate(date: string) {
+  const { data: allLogs, isLoading, error, refetch } = useDailyLogs();
+  
+  const entry = useMemo(() => {
+    if (!allLogs || !date) return null;
+    
+    const normalizedTarget = normalizeDateToYYYYMMDD(date);
+    
+    for (const log of allLogs) {
+      const dateStr = log.log_date || (log as any).date;
+      if (dateStr) {
+        const normalized = normalizeDateToYYYYMMDD(String(dateStr));
+        if (normalized === normalizedTarget) {
+          return log;
+        }
+      }
+    }
+    return null;
+  }, [allLogs, date]);
+  
+  return {
+    entry,
+    isLoading,
+    error,
+    refetch,
+  };
+}
