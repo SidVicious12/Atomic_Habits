@@ -223,18 +223,23 @@ export async function getAllDailyLogsFromSheets(): Promise<DailyLog[]> {
       console.log('📋 Sample log:', logs[0]);
       console.log('📋 Available columns:', Object.keys(logs[0]));
       
-      // Debug: Show sample values for key columns
+      // Debug: Show sample values for key columns including time fields
       const debugColumns = [
+        'time_awake',
+        'time_at_work',
+        'time_left_work',
+        'bed_time',
         'did_i_use_my_phone_for_social_media_30_mins_after_waking_up?',
         '#_of_bottles_of_water_drank?',
         'drink',
         '#_of_dabs',
         'breakfast',
-        'coffee'
+        'coffee',
+        'workout'
       ];
       console.log('🔍 DEBUG - Sample values for key columns:');
       debugColumns.forEach(col => {
-        const values = logs.slice(0, 10).map(log => log[col]);
+        const values = logs.slice(0, 5).map(log => log[col]);
         const nonNullCount = logs.filter(log => log[col] !== null && log[col] !== undefined).length;
         console.log(`  ${col}: [${values.join(', ')}] (${nonNullCount}/${logs.length} non-null)`);
       });

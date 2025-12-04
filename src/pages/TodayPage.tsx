@@ -85,7 +85,7 @@ const HABITS = [
   { key: 'weight_lbs', label: 'Weight (lbs)', icon: Scale, type: 'number', min: 50, max: 500, step: 0.5, section: 'Fitness' },
   
   // Wellness
-  { key: 'pages_read_count', label: 'Pages Read', icon: BookOpen, type: 'number', min: 0, max: 200, step: 5, section: 'Wellness' },
+  { key: 'pages_read_count', label: 'Pages Read', icon: BookOpen, type: 'number', min: 0, max: 200, step: 1, section: 'Wellness' },
   { key: 'relaxed_today', label: 'Relaxed', icon: Heart, type: 'boolean', section: 'Wellness' },
   { key: 'day_rating', label: 'Day Rating', icon: Zap, type: 'select', options: ['', 'Terrible', 'Bad', 'Okay', 'Good', 'Legendary'], section: 'Wellness' },
   { key: 'dream', label: 'Dream', icon: CloudMoon, type: 'text', section: 'Wellness' },
@@ -102,14 +102,47 @@ function getLocalDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+// Helper to convert 12-hour time format to 24-hour format for HTML input
+function convertTo24Hour(time12h: string | null | undefined): string {
+  if (!time12h || typeof time12h !== 'string') return '';
+
+  // Already in 24-hour format (HH:MM or HH:MM:SS)
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(time12h) && !time12h.includes('AM') && !time12h.includes('PM')) {
+    return time12h.slice(0, 5); // Return just HH:MM
+  }
+
+  // Parse 12-hour format (e.g., "9:51:00 AM" or "3:53:00 PM")
+  const match = time12h.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)/i);
+  if (!match) return '';
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const meridiem = match[3].toUpperCase();
+
+  // Convert to 24-hour format
+  if (meridiem === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (meridiem === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
 // Helper to find a value in log by searching for keys containing patterns
 function findValue(log: any, patterns: string[]): any {
   if (!log) return undefined;
+
   for (const key of Object.keys(log)) {
     const lowerKey = key.toLowerCase();
     for (const pattern of patterns) {
       if (lowerKey.includes(pattern.toLowerCase())) {
-        return log[key];
+        const value = log[key];
+        // Return the value even if it's falsy (except null/undefined)
+        // This ensures empty strings, false, and 0 are preserved
+        if (value !== null && value !== undefined) {
+          return value;
+        }
       }
     }
   }
@@ -125,10 +158,10 @@ export default function TodayPage() {
   
   // Get initial date from URL param or use today
   const initialDate = searchParams.get('date') || getLocalDateString();
-  
+
   // Fetch existing entry for this date (for editing)
   const { entry: existingEntry, isLoading: loadingEntry } = useEntryForDate(initialDate);
-  
+
   const [formData, setFormData] = useState<Partial<DailyLogEntry>>({
     date: initialDate,
     water_bottles_count: 0,
@@ -136,20 +169,37 @@ export default function TodayPage() {
     dabs_count: 0,
     calories: 0,
   });
-  
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [hasLoadedExisting, setHasLoadedExisting] = useState(false);
+  const [loadedDate, setLoadedDate] = useState<string | null>(null);
 
   // Pre-fill form with existing entry data when editing
+  // Reload whenever the date changes
   useEffect(() => {
-    if (existingEntry && !hasLoadedExisting) {
+    // Only load if we have an entry and haven't loaded this specific date yet
+    if (existingEntry && loadedDate !== initialDate) {
+      console.log('📝 Loading existing entry for date:', initialDate);
+      console.log('📋 Existing entry data:', existingEntry);
+      console.log('🔍 Available keys:', Object.keys(existingEntry));
+
+      // Check for time fields specifically
+      console.log('⏰ Time field values in entry:');
+      console.log('  time_awake:', existingEntry.time_awake, typeof existingEntry.time_awake);
+      console.log('  time_at_work:', existingEntry.time_at_work, typeof existingEntry.time_at_work);
+      console.log('  time_left_work:', existingEntry.time_left_work, typeof existingEntry.time_left_work);
+      console.log('  bed_time:', existingEntry.bed_time, typeof existingEntry.bed_time);
+
+      const timeAwakeValue = findValue(existingEntry, ['time_awake', 'awake']);
+      console.log('⏰ findValue result for time_awake:', timeAwakeValue, typeof timeAwakeValue);
+      console.log('⏰ Converted to 24h:', convertTo24Hour(timeAwakeValue));
+
       setFormData({
         date: initialDate,
-        time_awake: findValue(existingEntry, ['time_awake', 'awake']) || '',
-        time_at_work: findValue(existingEntry, ['time_at_work', 'at_work']) || '',
-        time_left_work: findValue(existingEntry, ['time_left_work', 'left_work']) || '',
-        bed_time: findValue(existingEntry, ['bed_time', 'bedtime']) || '',
+        time_awake: convertTo24Hour(timeAwakeValue),
+        time_at_work: convertTo24Hour(findValue(existingEntry, ['time_at_work', 'at_work'])),
+        time_left_work: convertTo24Hour(findValue(existingEntry, ['time_left_work', 'left_work'])),
+        bed_time: convertTo24Hour(findValue(existingEntry, ['bed_time', 'bedtime'])),
         coffee: findValue(existingEntry, ['coffee']) || false,
         breakfast: findValue(existingEntry, ['breakfast']) || false,
         phone_on_wake: findValue(existingEntry, ['phone', 'social_media']) || false,
@@ -173,16 +223,29 @@ export default function TodayPage() {
         dream: findValue(existingEntry, ['dream']) || '',
         latest_hype: findValue(existingEntry, ['hype', 'latest_hype']) || '',
       });
-      setHasLoadedExisting(true);
+      setLoadedDate(initialDate);
     }
-  }, [existingEntry, hasLoadedExisting, initialDate, lastLog?.weight_lbs]);
+    // If no existing entry but date changed, reset form to defaults
+    else if (!existingEntry && loadedDate !== initialDate) {
+      console.log('📝 No existing entry for date:', initialDate, '- resetting form');
+      setFormData({
+        date: initialDate,
+        water_bottles_count: 0,
+        pages_read_count: 0,
+        dabs_count: 0,
+        calories: 0,
+        weight_lbs: lastLog?.weight_lbs || undefined,
+      });
+      setLoadedDate(initialDate);
+    }
+  }, [existingEntry, loadedDate, initialDate, lastLog?.weight_lbs]);
 
   // Pre-fill weight from last log (only if no existing entry)
   useEffect(() => {
-    if (!existingEntry && lastLog?.weight_lbs && !hasLoadedExisting) {
+    if (!existingEntry && lastLog?.weight_lbs && loadedDate !== initialDate) {
       setFormData(prev => ({ ...prev, weight_lbs: lastLog.weight_lbs }));
     }
-  }, [lastLog, existingEntry, hasLoadedExisting]);
+  }, [lastLog, existingEntry, loadedDate, initialDate]);
 
   const updateField = useCallback((key: string, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
