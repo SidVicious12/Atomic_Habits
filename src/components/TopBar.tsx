@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ClipboardList, LogIn, LogOut, User, ChevronDown } from 'lucide-react';
+import { Search, ClipboardList, LogIn, LogOut, User, ChevronDown, Calendar, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -69,6 +69,7 @@ interface TopBarProps {
 
 export default function TopBar({ onSearch }: TopBarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile, isAuthenticated, signOut, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -98,8 +99,33 @@ export default function TopBar({ onSearch }: TopBarProps) {
   return (
     <div className="fixed top-0 left-0 right-0 z-30 bg-gray-50/80 backdrop-blur-sm border-b border-gray-200" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="flex items-center justify-between px-6 py-3 lg:pl-80">
-        {/* Spacer for left side */}
-        <div className="w-32 hidden lg:block" />
+        {/* Left side - Today and History Navigation */}
+        <div className="flex items-center gap-2">
+          <Link
+            to="/today"
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all",
+              location.pathname === '/today'
+                ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md"
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+          >
+            <Calendar size={18} />
+            <span className="hidden sm:inline">Today</span>
+          </Link>
+          <Link
+            to="/history"
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all",
+              location.pathname === '/history'
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+          >
+            <History size={18} />
+            <span className="hidden sm:inline">History</span>
+          </Link>
+        </div>
 
         {/* Center Search Bar */}
         <div className="flex-1 max-w-2xl mx-auto px-4">
